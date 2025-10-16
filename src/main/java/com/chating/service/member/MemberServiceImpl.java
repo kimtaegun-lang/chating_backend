@@ -1,13 +1,16 @@
 package com.chating.service.member;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.chating.common.CustomException;
 import com.chating.dto.SignInDTO;
@@ -15,6 +18,7 @@ import com.chating.dto.SignUpDTO;
 import com.chating.entity.member.Member;
 import com.chating.entity.member.Role;
 import com.chating.repository.member.MemberRepository;
+import com.chating.util.JwtUtil;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +29,8 @@ public class MemberServiceImpl implements MemberService{
 	private final MemberRepository memberRepository;
 	private final ModelMapper modelMapper;
 	private final PasswordEncoder passwordEncoder;
+	private final AuthenticationManager authenticationManager;
+	private final JwtUtil jwtUtil;
 	// 회원 가입 로직
 	@Transactional
 	public void signUpUser(SignUpDTO userData)
@@ -59,17 +65,21 @@ public class MemberServiceImpl implements MemberService{
 	}
 	
 	@Transactional
-	public void signIn(SignInDTO userData)
+	public String signIn(SignInDTO userData)
 	{
-		Optional<Member> memberOpt = memberRepository.findByMemId(userData.getMemId());
-		if (memberOpt.isEmpty()) {
-			 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호가 올바르지 않습니다.");
-		}
-		Member member = memberOpt.get();
-		if (!passwordEncoder.matches(userData.getPwd(), member.getPwd())) {
-			throw new CustomException(HttpStatus.UNAUTHORIZED,"아이디 또는 비밀번호가 올바르지 않습니다.");
-		}
-		//
-		
+	    try {
+	        Authentication authentication = authenticationManager.authenticate(
+	            new UsernamePasswordAuthenticationToken(
+	                userData.getMemId(),
+	                userData.getPwd()
+	            )
+	        );
+	        SecurityContextHolder.getContext().setAuthentication(authentication);
+	        
+	        // 토큰 생성 및 반환
+            return jwtUtil.generateToken(userData.getMemId());
+	    } catch (BadCredentialsException e) {
+	        throw new CustomException(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호가 올바르지 않습니다.");
+	    }		
 	}
 }
