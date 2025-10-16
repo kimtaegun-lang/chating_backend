@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 #Thu Oct 16 09:34:38 KST 2025
 host=kimtaegun
 process-id=26788
+=======
+#Thu Oct 16 09:19:11 KST 2025
+host=kimtaegun
+process-id=31200
+>>>>>>> 0605a548de0c6f918a8a5b87b4ee7b4fdc149723
 user=tee16
