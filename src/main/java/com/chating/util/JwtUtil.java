@@ -1,0 +1,53 @@
+package com.chating.util;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+@Component
+public class JwtUtil {
+
+    @Value("${jwt.secret:your-super-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm}")
+    private String secretKey;
+
+    @Value("${jwt.expiration:86400000}")
+    private long expirationTime;
+
+    // Token 생성
+    public String generateToken(String username) {
+        return Jwts.builder()
+                .setSubject(username) // 토큰에 저장할 정보
+                .setIssuedAt(new Date()) // 발행일
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime)) // 만료시간 
+                .signWith(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)), // 서명
+                         SignatureAlgorithm.HS256)
+                .compact(); // jwt 문자열 생성
+    }
+
+    // Token에서 username 추출
+    public String extractUsername(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)))
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
+
+    // Token 유효성 검증
+    public boolean isTokenValid(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)))
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}
