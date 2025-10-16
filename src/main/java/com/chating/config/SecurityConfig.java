@@ -33,7 +33,7 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                    .allowedOrigins("*")
+                    .allowedOrigins("http://localhost:3000")
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     .allowedHeaders("*");
             }
@@ -65,7 +65,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
             	.requestMatchers("/member/signUp").permitAll()
             	.requestMatchers("/member/signIn").permitAll()
-            	.requestMatchers("/h2-console/**").permitAll() 
+            	.requestMatchers("/h2-console/**").permitAll()
+            	.requestMatchers("/ws-chat/**").permitAll()
               .anyRequest().authenticated()
             )
             .headers(headers -> headers

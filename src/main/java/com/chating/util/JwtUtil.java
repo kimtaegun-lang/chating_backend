@@ -1,12 +1,15 @@
 package com.chating.util;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 @Component
 public class JwtUtil {
@@ -49,5 +52,11 @@ public class JwtUtil {
         } catch (Exception e) {
             return false;
         }
+    }
+    
+    // 현재 로그인 한 아이디 반환
+    public String getLoginId() {
+    	String id=SecurityContextHolder.getContext().getAuthentication().getName();
+    	return id;
     }
 }
