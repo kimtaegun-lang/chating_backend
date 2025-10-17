@@ -23,6 +23,7 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
         // 클라이언트가 접속할 수 있는 주소 등록
     	// 메시지 전송전 연결하는 경로
     	 registry.addEndpoint("/ws-chat")
+    	 .setAllowedOrigins("http://localhost:3000")
          .withSockJS();
     }
 }
