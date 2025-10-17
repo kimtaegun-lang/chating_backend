@@ -2,15 +2,17 @@ package com.chating.entity.member;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -44,4 +46,9 @@ public class Member {
 	
 	@Enumerated(EnumType.STRING)
 	private Role role; // 권한
+	
+	// 리프레시 토큰 리스트 (여러기기 로그인 고려)
+	@OneToMany(mappedBy="member",cascade=CascadeType.REMOVE)
+	private List<RefreshToken> refreshTokens;
+	
 }

@@ -20,8 +20,11 @@ public class JwtUtil {
     @Value("${jwt.expiration:86400000}")
     private long expirationTime;
 
+    @Value("${jwt.expiration:604800000}")
+    private long refreshExpirationTime;
+    
     // Token 생성
-    public String generateToken(String username) {
+    public String generateAccessToken(String username) {
         return Jwts.builder()
                 .setSubject(username) // 토큰에 저장할 정보
                 .setIssuedAt(new Date()) // 발행일
@@ -31,6 +34,15 @@ public class JwtUtil {
                 .compact(); // jwt 문자열 생성
     }
 
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationTime))
+                .signWith(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
+                .compact();
+    }
+    
     // Token에서 username 추출
     public String extractUsername(String token) {
         return Jwts.parserBuilder()

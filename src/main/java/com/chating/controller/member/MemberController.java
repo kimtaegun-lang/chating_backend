@@ -1,5 +1,7 @@
 package com.chating.controller.member;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,8 +33,8 @@ public class MemberController {
 	@PostMapping("signIn")
 	public ResponseEntity<SignInResDTO> signIn(@RequestBody @Valid SignInDTO userData)
 	{
-		String token=memberService.signIn(userData);
-		 SignInResDTO response = new SignInResDTO(token, "로그인 완료");
+		 Map<String,String>tokens=memberService.signIn(userData);
+		 SignInResDTO response = new SignInResDTO(tokens, "로그인 완료");
 		 return ResponseEntity.ok(response);
 	}
 }
