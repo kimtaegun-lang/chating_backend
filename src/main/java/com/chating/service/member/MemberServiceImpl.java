@@ -94,7 +94,7 @@ public class MemberServiceImpl implements MemberService{
 	            .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
 	        
 	        // 기존 리프레시 토큰 삭제 (하나의 기기만 로그인 유지)
-	        refreshTokenRepository.deleteByMemberId(userData.getMemId());
+	        refreshTokenRepository.deleteByMemberMemId(userData.getMemId());
 	        
 	        // 새 리프레시 토큰 저장
 	        RefreshToken newRefreshToken = RefreshToken.builder()
