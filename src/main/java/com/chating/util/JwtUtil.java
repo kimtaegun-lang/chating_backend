@@ -4,8 +4,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import com.chating.common.CustomException;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -66,9 +70,15 @@ public class JwtUtil {
         }
     }
     
-    // 현재 로그인 한 아이디 반환
+ // 현재 로그인 한 아이디 반환 (안전 버전)
     public String getLoginId() {
-    	String id=SecurityContextHolder.getContext().getAuthentication().getName();
-    	return id;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+        	throw new CustomException(HttpStatus.UNAUTHORIZED,"로그인 되지 않은 상태입니다.");
+        }
+
+        return auth.getName();
     }
+
 }

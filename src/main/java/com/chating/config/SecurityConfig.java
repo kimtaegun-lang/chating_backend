@@ -33,7 +33,7 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                    .allowedOrigins("http://localhost:3000")
+                    .allowedOrigins("http://localhost:3000","http://localhost:3001")
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     .allowedHeaders("*");
             }
@@ -53,7 +53,7 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    // Spring Security 보안 설정
+    // HTTP 요청에만 사용됨 Spring Security 보안 설정
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
        return http

@@ -109,6 +109,8 @@ public class MemberServiceImpl implements MemberService{
 	        Map<String, String> tokens = new HashMap<>();
 	        tokens.put("accessToken", accessToken);
 	        tokens.put("refreshToken", refreshToken);
+	        tokens.put("memId", member.getMemId());
+	        tokens.put("name",member.getName());
 	        return tokens;
 	        
 	    } catch (BadCredentialsException e) {
