@@ -49,6 +49,11 @@ dependencies {
     
     // model mapper
     implementation 'org.modelmapper:modelmapper:3.1.0'
+    
+    // rabbitmq
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    // Reactor Netty
+    implementation("io.projectreactor.netty:reactor-netty:1.1.4")
 }
 
 tasks.named('test') {

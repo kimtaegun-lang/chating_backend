@@ -1,14 +1,16 @@
 package com.chating.util;
 
-import com.chating.util.JwtUtil;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.OncePerRequestFilter;
-import java.io.IOException;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -32,8 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = jwtUtil.extractUsername(token);
                 // SecurityContext에 인증 등록
                 UsernamePasswordAuthenticationToken authentication = 
-                    new UsernamePasswordAuthenticationToken(username, null, null);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                        new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
+                												// 사용자, 비밀번호, 권한
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
         // 다음 필터 실행

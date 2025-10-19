@@ -17,10 +17,10 @@ import lombok.RequiredArgsConstructor;
 public class ChatServiceImpl implements ChatService {
 	private final ModelMapper modelMapper;
 	private final ChatRepository chatRepository;
-	public void saveMessage(ChatMessageDTO message) {
+	public Chat saveMessage(ChatMessageDTO message) {
 		Chat chat=modelMapper.map(message, Chat.class);
 		chat.setCreatedAt(LocalDateTime.now());
-		chatRepository.save(chat);
+		return chatRepository.save(chat);
 	}
 	
 	public List<Chat>getConversation(String user1,String user2)
