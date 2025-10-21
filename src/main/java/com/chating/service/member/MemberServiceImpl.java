@@ -16,8 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.chating.common.CustomException;
-import com.chating.dto.SignInDTO;
-import com.chating.dto.SignUpDTO;
+import com.chating.dto.member.SignInDTO;
+import com.chating.dto.member.SignUpDTO;
 import com.chating.entity.member.Member;
 import com.chating.entity.member.RefreshToken;
 import com.chating.entity.member.Role;

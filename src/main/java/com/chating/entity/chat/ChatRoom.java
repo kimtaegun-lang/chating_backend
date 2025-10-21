@@ -1,38 +1,43 @@
-package com.chating.entity.member;
+package com.chating.entity.chat;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Data
-@Table(name="chat")
+@Table(name="chat_room")
 @AllArgsConstructor
 @NoArgsConstructor
-public class Chat implements Serializable{
-	private static final long serialVersionUID = 1L;
+@Builder
+public class ChatRoom {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	private Long chatId; // 채팅방 번호
+	private Long roomId; // 채팅방 번호
 	
 	@Column(nullable=false)
-	private String sender;       // 보낸이
+	private String user1; // 회원1
 	
 	@Column(nullable=false)
-    private String receiver;     // 받는 사람 
+    private String user2; // 회원 2
 	
 	@Column(nullable=false)
-	private LocalDateTime createdAt; // 메시지 전송 시간
+	private LocalDateTime createdAt; // 방 개설 시간
 	
-	@Column(nullable=false)
-	private String content;
+	@OneToMany(mappedBy="chatroom" ,cascade=CascadeType.REMOVE)
+	@ToString.Exclude
+	private List<Chat> chat; // 채팅 내역
 }

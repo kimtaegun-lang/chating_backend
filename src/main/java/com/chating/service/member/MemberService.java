@@ -2,8 +2,8 @@ package com.chating.service.member;
 
 import java.util.Map;
 
-import com.chating.dto.SignInDTO;
-import com.chating.dto.SignUpDTO;
+import com.chating.dto.member.SignInDTO;
+import com.chating.dto.member.SignUpDTO;
 
 public interface MemberService {
 	public void signUpUser(SignUpDTO userData); // 회원 가입 로직

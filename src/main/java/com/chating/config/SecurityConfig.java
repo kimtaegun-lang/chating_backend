@@ -56,7 +56,7 @@ public class SecurityConfig {
     // HTTP 요청에만 사용됨 Spring Security 보안 설정
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-       return http
+       return http .cors(cors -> {})
         	// csrf 기능 disabled
             .csrf(csrf -> csrf.disable())
             // 서버가 셰션을 저장하지 않음
