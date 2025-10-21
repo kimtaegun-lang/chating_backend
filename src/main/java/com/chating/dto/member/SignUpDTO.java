@@ -1,4 +1,4 @@
-package com.chating.dto;
+package com.chating.dto.member;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

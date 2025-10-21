@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name="member")
@@ -56,6 +57,7 @@ public class Member {
 	
 	// 리프레시 토큰 리스트 (여러기기 로그인 고려)
 	@OneToMany(mappedBy="member",cascade=CascadeType.REMOVE)
+	@ToString.Exclude
 	private List<RefreshToken> refreshTokens;
 	
 }

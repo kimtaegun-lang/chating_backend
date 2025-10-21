@@ -20,7 +20,7 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 	  @Override
 	    public void configureMessageBroker(MessageBrokerRegistry config) {
 	        // RabbitMQ STOMP 브로커 설정
-	        config.enableStompBrokerRelay("/topic", "/queue")  
+	        config.enableStompBrokerRelay("/topic", "/queue")
 	                .setRelayHost("localhost")
 	                .setRelayPort(61613)
 	                .setClientLogin("guest")

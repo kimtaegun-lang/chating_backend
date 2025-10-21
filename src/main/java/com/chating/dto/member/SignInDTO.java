@@ -1,4 +1,4 @@
-package com.chating.dto;
+package com.chating.dto.member;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
