@@ -358,3 +358,6 @@ select * from chat where roomId=2 [42122-232]
 	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:493)
 	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
 	at java.base/java.lang.Thread.run(Thread.java:842)
+2025-10-21 10:48:27.265943+09:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "select * from refresh_token[*]=2"; SQL statement:
+select * from refresh_token=2 [42000-232]

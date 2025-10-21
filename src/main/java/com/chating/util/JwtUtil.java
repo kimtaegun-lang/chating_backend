@@ -21,10 +21,12 @@ public class JwtUtil {
     @Value("${jwt.secret:your-super-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm}")
     private String secretKey;
 
-    @Value("${jwt.expiration:86400000}")
+ //   @Value("${jwt.expiration:86400000}")
+    @Value("${jwt.access.expiration:10000}")
     private long expirationTime;
 
-    @Value("${jwt.expiration:604800000}")
+    //@Value("${jwt.expiration:604800000}")
+    @Value("${jwt.refresh.expiration:20000}")
     private long refreshExpirationTime;
     
     // Token 생성

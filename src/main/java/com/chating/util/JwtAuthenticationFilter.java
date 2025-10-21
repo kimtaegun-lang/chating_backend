@@ -3,9 +3,12 @@ package com.chating.util;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.chating.common.CustomException;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -37,6 +40,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
                 												// 사용자, 비밀번호, 권한
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+            else {
+                // 토큰 만료 시 401 응답 직접 반환
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"error\":\"UNAUTHORIZED\",\"message\":\"토큰이 만료되었습니다.\"}");
+                return; // 여기서 필터 체인 중단! (중요)
             }
         }
         // 다음 필터 실행

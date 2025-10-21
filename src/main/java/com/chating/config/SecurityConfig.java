@@ -65,6 +65,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
             	.requestMatchers("/member/signUp").permitAll()
             	.requestMatchers("/member/signIn").permitAll()
+            	.requestMatchers("/api/refresh").permitAll()
             	.requestMatchers("/h2-console/**").permitAll()
             	.requestMatchers("/ws-chat/**").permitAll()
               .anyRequest().authenticated()
