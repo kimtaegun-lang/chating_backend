@@ -361,3 +361,6 @@ select * from chat where roomId=2 [42122-232]
 2025-10-21 10:48:27.265943+09:00 jdbc[13]: exception
 org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "select * from refresh_token[*]=2"; SQL statement:
 select * from refresh_token=2 [42000-232]
+2025-10-22 11:27:22.669520+09:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "delete [*]* from chat_room where room_id=4"; expected "identifier"; SQL statement:
+delete * from chat_room where room_id=4 [42001-232]

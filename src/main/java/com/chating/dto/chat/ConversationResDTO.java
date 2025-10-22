@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ConversationResDTO {
+public class ConversationResDTO { // 채팅 내역 res dto
 	private String sender; // 회원 아이디1
 	 private String receiver; // 회원 아이디2 
 	private LocalDateTime createdAt; // 메시지 전송 시간
