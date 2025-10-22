@@ -1,5 +1,6 @@
 package com.chating.repository.refresh;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,4 +16,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken,Long>
 	
 	// 로그아웃 시 토큰 삭제
 	void deleteByMemberMemId(String memId);
+	
+	// 해당 아이디에 저장된 refresh 토큰 조회
+	List<RefreshToken> findAllByMemberMemId(String memId);
 }

@@ -42,11 +42,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
             }
             else {
-                // 토큰 만료 시 401 응답 직접 반환
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"error\":\"UNAUTHORIZED\",\"message\":\"토큰이 만료되었습니다.\"}");
-                return; // 여기서 필터 체인 중단! (중요)
+                response.getWriter().write("{\"error\":\"TOKEN_EXPIRED\",\"message\":\"토큰이 만료되었습니다.\"}");
+                return;
             }
         }
         // 다음 필터 실행
