@@ -24,6 +24,7 @@ import com.chating.dto.member.SignUpDTO;
 import com.chating.entity.member.Member;
 import com.chating.entity.member.RefreshToken;
 import com.chating.entity.member.Role;
+import com.chating.entity.member.Status;
 import com.chating.repository.member.MemberRepository;
 import com.chating.repository.refresh.RefreshTokenRepository;
 import com.chating.util.JwtUtil;
@@ -67,7 +68,7 @@ public class MemberServiceImpl implements MemberService {
 		// 생성일자, Role 설정
 		member.setCreatedAt(LocalDateTime.now());
 		member.setRole(Role.USER);
-
+		member.setStatus(Status.ACTIVE);
 		// 저장
 		memberRepository.save(member);
 	}
@@ -82,7 +83,7 @@ public class MemberServiceImpl implements MemberService {
 			// securityContext에 인증 정보 저장
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 
-			String accessToken = jwtUtil.generateAccessToken(userData.getMemId());
+			String accessToken = jwtUtil.generateAccessToken(userData.getMemId(),Role.USER);
 			String refreshToken = jwtUtil.generateRefreshToken(userData.getMemId());
 
 			// Member 조회

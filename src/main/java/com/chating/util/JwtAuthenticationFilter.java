@@ -2,13 +2,13 @@ package com.chating.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import com.chating.common.CustomException;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,28 +27,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
                                    FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
-
+        
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-
-            // 토큰이 유효 할 경우엔
+            
             if (jwtUtil.isTokenValid(token)) {
-            	// 토큰에서 회원 이름 추출
                 String username = jwtUtil.extractUsername(token);
-                // SecurityContext에 인증 등록
+                String role = jwtUtil.extractRole(token);  // role 추출
+                
+                // 권한 설정
+                List<GrantedAuthority> authorities = new ArrayList<>();
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role));  // "ROLE_" 접두사 필수
+                
                 UsernamePasswordAuthenticationToken authentication = 
-                        new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
-                												// 사용자, 비밀번호, 권한
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-            else {
+                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+                
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().write("{\"error\":\"TOKEN_EXPIRED\",\"message\":\"토큰이 만료되었습니다.\"}");
                 return;
             }
         }
-        // 다음 필터 실행
+        
         filterChain.doFilter(request, response);
     }
 }

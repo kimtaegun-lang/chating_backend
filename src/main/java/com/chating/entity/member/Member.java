@@ -55,6 +55,10 @@ public class Member {
 	@Column(nullable=false)
 	private Role role; // 권한
 	
+	@Enumerated(EnumType.STRING)
+	@Column(nullable=false)
+	private Status status; // 상태
+	
 	// 리프레시 토큰 리스트 (여러기기 로그인 고려)
 	@OneToMany(mappedBy="member",cascade=CascadeType.REMOVE)
 	@ToString.Exclude

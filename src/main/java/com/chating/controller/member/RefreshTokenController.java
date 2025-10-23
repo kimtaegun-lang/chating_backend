@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.chating.entity.member.Role;
 import com.chating.util.JwtUtil;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,7 +32,7 @@ public class RefreshTokenController {
         }
         
         String username = jwtUtil.extractUsername(refreshToken);
-        String newAccessToken = jwtUtil.generateAccessToken(username);
+        String newAccessToken = jwtUtil.generateAccessToken(username,Role.USER);
         
         System.out.println("토큰 재발급 완료: " + username);
         

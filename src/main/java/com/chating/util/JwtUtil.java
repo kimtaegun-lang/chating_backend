@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.chating.common.CustomException;
+import com.chating.entity.member.Role;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -28,10 +29,11 @@ public class JwtUtil {
     private long refreshExpirationTime;
     
     // Token 생성
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(String username,Role role) {
         return Jwts.builder()
                 .setSubject(username) // 토큰에 저장할 정보
                 .setIssuedAt(new Date()) // 발행일
+                .claim("role",role)
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime)) // 만료시간 
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)), // 서명
                          SignatureAlgorithm.HS256)
@@ -57,6 +59,17 @@ public class JwtUtil {
                 .getSubject();
     }
 
+ // 토큰에서 role 추출 
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)))
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
+    }
+
+    
     // Token 유효성 검증
     public boolean isTokenValid(String token) {
         try {
@@ -70,8 +83,19 @@ public class JwtUtil {
         }
     }
     
- // 현재 로그인 한 아이디 반환 (안전 버전)
+    // 현재 로그인 한 아이디 반환 (안전 버전)
     public String getLoginId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+        	throw new CustomException(HttpStatus.UNAUTHORIZED,"로그인 되지 않은 상태입니다.");
+        }
+
+        return auth.getName();
+    }
+
+    // 현재 로그인 한 아이디 반환 (안전 버전)
+    public String getRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
