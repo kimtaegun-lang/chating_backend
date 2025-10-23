@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatMessageDTO { // 메시지 전송 req dto
+public class sendMessageDTO { // 메시지 전송 req dto
     
     private String sender;      // 보낸 사람
     

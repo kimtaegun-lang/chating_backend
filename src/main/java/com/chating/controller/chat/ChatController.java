@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chating.dto.chat.ChatMessageDTO;
+import com.chating.dto.chat.BroadcastResDTO;
 import com.chating.dto.chat.ConversationDTO;
+import com.chating.dto.chat.DeleteMessageDTO;
+import com.chating.dto.chat.sendMessageDTO;
 import com.chating.service.chat.ChatService;
 
 import jakarta.validation.Valid;
@@ -25,33 +27,37 @@ import lombok.RequiredArgsConstructor;
 public class ChatController {
 	private final ChatService chatService;
 
-	// roomId 기반 메시지 전송 (RabbitMQ)
+	// 메시지 전송
 	@MessageMapping("/send")
-	public ResponseEntity<String> sendMessage(@Valid ChatMessageDTO message, SimpMessageHeaderAccessor headerAccessor) {
-	    String userId = (String) headerAccessor.getSessionAttributes().get("userId");
-	    message.setSender(userId);
-	    chatService.sendMessage(message);
-	    return ResponseEntity.ok("메시지 전송 완료");
+	public ResponseEntity<String> sendMessage(@Valid sendMessageDTO message) {
+	chatService.saveMessage(message);
+		return ResponseEntity.ok("메시지 전송 완료");
+	}
+
+	// 메시지 삭제
+	@MessageMapping("/delete")
+	public ResponseEntity<String> deleteChat(@Valid DeleteMessageDTO message) {
+		chatService.deleteChat(message);
+		return ResponseEntity.ok("메시지가 정상적으로 삭제되었습니다.");
 	}
 
 	// 대화 내역 조회
 	@PreAuthorize("isAuthenticated()")
 	@PostMapping("api/chat/getConversation")
-	public ResponseEntity<Map<String,Object>> getConversation(@RequestBody @Valid ConversationDTO conversationDTO) {
-		 Map<String, Object> response = new HashMap<>();
-		    response.put("message", "대화 내역 조회 완료");
-		    response.put("data", chatService.getConversation(conversationDTO)); // 실제 대화 데이터
-		    return ResponseEntity.ok(response);
+	public ResponseEntity<Map<String, Object>> getConversation(@RequestBody @Valid ConversationDTO conversationDTO) {
+		Map<String, Object> response = new HashMap<>();
+		response.put("message", "대화 내역 조회 완료");
+		response.put("data", chatService.getConversation(conversationDTO)); // 실제 대화 데이터
+		return ResponseEntity.ok(response);
 	}
-	
+
 	// 채팅방 조회
 	@PreAuthorize("isAuthenticated()")
 	@GetMapping("/api/chat/chatRooms")
-	public ResponseEntity<Map<String,Object>> getMyChatRooms(
-			@RequestParam("userId") String userId) {
-		Map<String,Object> response=new HashMap<>();
+	public ResponseEntity<Map<String, Object>> getMyChatRooms(@RequestParam("userId") String userId) {
+		Map<String, Object> response = new HashMap<>();
 		response.put("message", "채팅 목록 조회 완료");
 		response.put("data", chatService.getMyChatRooms(userId));
-	    return ResponseEntity.ok(response);
+		return ResponseEntity.ok(response);
 	}
 }

@@ -12,13 +12,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.chating.common.CustomException;
-import com.chating.dto.chat.ChatMessageDTO;
-import com.chating.dto.chat.ChatMessageResDTO;
+import com.chating.dto.chat.BroadcastResDTO;
 import com.chating.dto.chat.ChatRoomResDTO;
 import com.chating.dto.chat.ConversationDTO;
 import com.chating.dto.chat.ConversationResDTO;
+import com.chating.dto.chat.DeleteMessageDTO;
+import com.chating.dto.chat.sendMessageDTO;
 import com.chating.dto.common.PageResponseDTO;
 import com.chating.entity.chat.Chat;
 import com.chating.entity.chat.ChatRoom;
@@ -38,7 +38,7 @@ public class ChatServiceImpl implements ChatService {
     
     // 메시지 저장
     @Override
-    public ChatMessageResDTO saveMessage(ChatMessageDTO message) {
+    public void saveMessage(sendMessageDTO message) {
         
         // 채팅방 존재 여부 확인
         ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
@@ -47,7 +47,7 @@ public class ChatServiceImpl implements ChatService {
             )
             .orElseThrow(() -> new CustomException(
                 HttpStatus.NOT_FOUND,
-                "채팅방을 찾을 수 없습니다."
+                "유효하지 않는 채팅방 입니다."
             ));
        
         // 메시지 저장
@@ -60,9 +60,40 @@ public class ChatServiceImpl implements ChatService {
             .build();
 
         Chat savedChat = chatRepository.save(chat);
-        return modelMapper.map(savedChat, ChatMessageResDTO.class);
+        BroadcastResDTO response =modelMapper.map(savedChat, BroadcastResDTO.class);
+        response.setType("CREATE");
+        
+        messagingTemplate.convertAndSend("/topic/chatroom-" + message.getRoomId(), response);
     }
 
+    // 채팅 삭제
+    @Transactional
+    public void deleteChat(DeleteMessageDTO message) {
+        Chat chat = chatRepository.findById(message.getChatId())
+            .orElseThrow(() -> new CustomException(
+                HttpStatus.NOT_FOUND,
+                "해당 채팅을 찾을 수 없습니다."
+            ));
+        
+        // 채팅방 존재 여부 확인
+        ChatRoom chatRoom = chatRoomRepository.findById(
+                message.getRoomId())
+            .orElseThrow(() -> new CustomException(
+                HttpStatus.NOT_FOUND,
+                "유효하지 않은 채팅방 입니다."
+            ));
+        
+        chatRepository.deleteById(message.getChatId());
+        
+        // 삭제 알림 객체 생성
+        BroadcastResDTO response=BroadcastResDTO.builder()
+            .chatId(message.getChatId())
+            .type("DELETE")
+            .build();
+        
+        messagingTemplate.convertAndSend("/topic/chatroom-" + message.getRoomId(), response);
+    }
+    
     // 대화 내역 조회
     @Override
     @Transactional(readOnly = true)
@@ -115,11 +146,5 @@ public class ChatServiceImpl implements ChatService {
         }
 
         return chatRoomRepository.findMyChatRooms(userId);
-    }
-
-    // 메시지 전송 및 브로드캐스트
-    public void sendMessage(ChatMessageDTO message) {
-        ChatMessageResDTO savedChat = saveMessage(message);
-        messagingTemplate.convertAndSend("/queue/chatroom-" + message.getRoomId(), savedChat);
     }
 }
