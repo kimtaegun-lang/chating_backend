@@ -110,6 +110,7 @@ public class MemberServiceImpl implements MemberService {
 			tokens.put("refreshToken", refreshToken);
 			tokens.put("memId", member.getMemId());
 			tokens.put("name", member.getName());
+			tokens.put("role", member.getRole().toString());
 			return tokens;
 
 		} catch (BadCredentialsException e) {

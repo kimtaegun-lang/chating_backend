@@ -40,6 +40,7 @@ public class MemberController {
 		 response.put("data", tokens);
 		 response.put("message", "로그인이 완료되었습니다.");
 		
+		 System.out.println(response);
 		 return ResponseEntity.ok(response);
 	}
 	

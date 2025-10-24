@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.chating.entity.member.Gender;
 import com.chating.entity.member.Role;
+import com.chating.entity.member.Status;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,4 +22,5 @@ public class MemberListDTO {
     private Gender gender;          // 성별
     private Role role;              // 권한
     private LocalDateTime createdAt; // 가입일
+    private Status status; 			// 상태
 }
