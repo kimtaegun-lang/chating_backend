@@ -77,26 +77,29 @@ public class MemberServiceImpl implements MemberService {
 	@Transactional
 	public Map<String, String> signIn(SignInDTO userData) {
 		try {
+			// Member 조회
+			Member member = memberRepository.findById(userData.getMemId())
+					.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
+
+			if (member.getStatus() == Status.BANNED) {
+			    throw new CustomException(HttpStatus.FORBIDDEN, "이 계정은 이용이 정지되었습니다.");
+			}
+			
 			Authentication authentication = authenticationManager
 					.authenticate(new UsernamePasswordAuthenticationToken(userData.getMemId(), userData.getPwd()));
 
 			// securityContext에 인증 정보 저장
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 
-			String accessToken = jwtUtil.generateAccessToken(userData.getMemId(),Role.USER);
+			String accessToken = jwtUtil.generateAccessToken(userData.getMemId(), Role.USER);
 			String refreshToken = jwtUtil.generateRefreshToken(userData.getMemId());
-
-			// Member 조회
-			Member member = memberRepository.findById(userData.getMemId())
-					.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
 
 			// refresh token 제어
 			List<RefreshToken> existingTokens = refreshTokenRepository.findAllByMemberMemId(userData.getMemId());
-			if (existingTokens.size() >= 5) {  // 최대 5개 허용
-			    RefreshToken oldest = existingTokens.stream()
-			        .min(Comparator.comparing(RefreshToken::getCreatedTime))
-			        .orElseThrow();
-			    refreshTokenRepository.delete(oldest);
+			if (existingTokens.size() >= 5) { // 최대 5개 허용
+				RefreshToken oldest = existingTokens.stream().min(Comparator.comparing(RefreshToken::getCreatedTime))
+						.orElseThrow();
+				refreshTokenRepository.delete(oldest);
 			}
 
 			// 새 리프레시 토큰 저장
@@ -125,11 +128,11 @@ public class MemberServiceImpl implements MemberService {
 				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
 		refreshTokenRepository.deleteByMemberMemId(member.getMemId());
 	}
-	
+
 	public MemberInfo getMemberInfo() {
-		String userId=jwtUtil.getLoginId();
+		String userId = jwtUtil.getLoginId();
 		Member member = memberRepository.findById(userId)
 				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
-		return modelMapper.map(member,MemberInfo.class);
+		return modelMapper.map(member, MemberInfo.class);
 	}
 }
