@@ -13,6 +13,7 @@ import com.chating.common.CustomException;
 import com.chating.dto.admin.MemberDetailDTO;
 import com.chating.dto.admin.MemberListDTO;
 import com.chating.dto.common.PageResponseDTO;
+import com.chating.dto.common.SearchOptionDTO;
 import com.chating.entity.member.Member;
 import com.chating.entity.member.Status;
 import com.chating.repository.member.MemberRepository;
@@ -28,19 +29,27 @@ public class AdminServiceImpl implements AdminService {
     private final ModelMapper modelMapper;
 
     @Override
-    public PageResponseDTO<MemberListDTO> getAllMembers(int pageCount, int size) {
-        // 페이지 요청 생성 (최신순 정렬)
-        Pageable pageable = PageRequest.of(pageCount, size, Sort.by("createdAt").descending());
-
-        // 회원 조회
-        Page<Member> memberPage = memberRepository.findAll(pageable);
-
-        // Entity -> DTO 변환 (ModelMapper 사용)
-        Page<MemberListDTO> dtoPage = memberPage.map(member ->
-            modelMapper.map(member, MemberListDTO.class)
+    public PageResponseDTO<MemberListDTO> getAllMembers(
+            int pageCount, 
+            int size, 
+            SearchOptionDTO searchOptionDTO) {
+        
+        // Pageable 생성 (정렬은 쿼리에서 처리)
+        Pageable pageable = PageRequest.of(pageCount, size);
+        
+        // 검색 쿼리 사용
+        Page<Member> memberPage = memberRepository.findAllWithSearch(
+                searchOptionDTO.getSearchType(),
+                searchOptionDTO.getSearch(),
+                searchOptionDTO.getSortType(),
+                pageable
         );
-
-        // PageResponseDTO로 변환 (생성자 사용)
+        
+        // Entity -> DTO 변환
+        Page<MemberListDTO> dtoPage = memberPage.map(member ->
+                modelMapper.map(member, MemberListDTO.class)
+        );
+        
         return new PageResponseDTO<>(dtoPage);
     }
 
