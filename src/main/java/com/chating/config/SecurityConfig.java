@@ -13,19 +13,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import com.chating.security.JwtAuthenticationErrorHandler;
 import com.chating.util.JwtAuthenticationFilter;
 import com.chating.util.JwtUtil;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
-
-    public SecurityConfig(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
-
+    private final JwtAuthenticationErrorHandler jwtAuthenticationErrorHandler;
+  
     // CORS 설정
     @Bean
     public WebMvcConfigurer corsConfigurer() {
@@ -70,11 +71,16 @@ public class SecurityConfig {
             	.requestMatchers("/ws-chat/**").permitAll()
               .anyRequest().authenticated()
             )
-            .headers(headers -> headers
+            .exceptionHandling(ex -> ex
+                    .authenticationEntryPoint(jwtAuthenticationErrorHandler) 
+                )
+                .headers(headers -> headers
                     .frameOptions(frameOptions -> frameOptions.disable())
                 )
-            // 커스텀 필터
-            .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(
+                    new JwtAuthenticationFilter(jwtUtil, jwtAuthenticationErrorHandler), 
+                    UsernamePasswordAuthenticationFilter.class
+                )
             .build();
        
     }

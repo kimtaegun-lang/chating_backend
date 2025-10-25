@@ -1,4 +1,3 @@
-// RandomChatController.java
 package com.chating.controller.chat;
 
 import org.springframework.http.ResponseEntity;

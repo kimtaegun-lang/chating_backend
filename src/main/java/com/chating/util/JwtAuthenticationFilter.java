@@ -10,18 +10,20 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.chating.security.JwtAuthenticationErrorHandler;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
+    private final JwtAuthenticationErrorHandler errorHandler;
+    
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
@@ -37,16 +39,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 // 권한 설정
                 List<GrantedAuthority> authorities = new ArrayList<>();
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + role));  // "ROLE_" 접두사 필수
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role));  
                 
                 UsernamePasswordAuthenticationToken authentication = 
                         new UsernamePasswordAuthenticationToken(username, null, authorities);
                 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"error\":\"TOKEN_EXPIRED\",\"message\":\"토큰이 만료되었습니다.\"}");
+                // 유효하지 않은 토큰
+                errorHandler.handleInvalidToken(response);
                 return;
             }
         }

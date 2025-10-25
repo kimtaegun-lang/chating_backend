@@ -29,7 +29,6 @@ public class ChatMatchingServiceImpl implements ChatMatchingService {
 	// 채팅방 생성
 	@Override
 	public Long createChatRoom(String user1,String user2) {
-
 		if (user1 == null || user2.trim().isEmpty()) {
 			throw new IllegalArgumentException("발신자 정보가 필요합니다");
 		}
