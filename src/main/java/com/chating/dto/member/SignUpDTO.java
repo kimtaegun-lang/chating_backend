@@ -28,7 +28,7 @@ public class SignUpDTO {
 	@NotBlank(message = "비밀번호를 입력해 주세요.")
 	@Size(min = 6, max = 12, message = "비밀번호는 6자 이상 12자 이내로 입력해주세요.")
 	@Pattern(regexp = "^(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]+$", message = "비밀번호는 영문, 숫자, 특수문자만 가능하며 특수문자를 최소 1개 포함해야 합니다.")
-	private String pwd; // 비밀번호
+	private String pwd; // 비밀k번호
 
 	@NotBlank(message = "이름을 입력해 주세요.")
 	private String name; // 이름

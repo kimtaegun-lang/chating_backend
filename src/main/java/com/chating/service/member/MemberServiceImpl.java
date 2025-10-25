@@ -21,6 +21,7 @@ import com.chating.common.CustomException;
 import com.chating.dto.member.MemberInfo;
 import com.chating.dto.member.SignInDTO;
 import com.chating.dto.member.SignUpDTO;
+import com.chating.dto.member.UpdateMemberDTO;
 import com.chating.entity.member.Member;
 import com.chating.entity.member.RefreshToken;
 import com.chating.entity.member.Role;
@@ -134,5 +135,67 @@ public class MemberServiceImpl implements MemberService {
 		Member member = memberRepository.findById(userId)
 				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
 		return modelMapper.map(member, MemberInfo.class);
+	}
+	
+	// 회원 정보 수정
+	@Transactional
+	public void updateMemberInfo(UpdateMemberDTO updateData) {
+		String userId = jwtUtil.getLoginId();
+		Member member = memberRepository.findById(userId)
+				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
+
+		// 이메일 변경 시 중복 체크
+		if (updateData.getEmail() != null && !updateData.getEmail().equals(member.getEmail())) {
+			if (memberRepository.existsByEmail(updateData.getEmail())) {
+				throw new CustomException(HttpStatus.BAD_REQUEST, "이미 사용 중인 이메일입니다.");
+			}
+			member.setEmail(updateData.getEmail());
+		}
+
+		// 전화번호 변경 시 중복 체크
+		if (updateData.getPhone() != null && !updateData.getPhone().equals(member.getPhone())) {
+			if (memberRepository.existsByPhone(updateData.getPhone())) {
+				throw new CustomException(HttpStatus.BAD_REQUEST, "이미 사용 중인 전화번호입니다.");
+			}
+			member.setPhone(updateData.getPhone());
+		}
+
+		// 주소 변경
+		if (updateData.getAddr() != null) {
+			member.setAddr(updateData.getAddr());
+		}
+
+		// 비밀번호 변경
+		if (updateData.getNewPwd() != null && !updateData.getNewPwd().isEmpty()) {
+			// 현재 비밀번호 확인
+			if (updateData.getCurrentPwd() == null || updateData.getCurrentPwd().isEmpty()) {
+				throw new CustomException(HttpStatus.BAD_REQUEST, "현재 비밀번호를 입력해주세요.");
+			}
+			
+			if (!passwordEncoder.matches(updateData.getCurrentPwd(), member.getPwd())) {
+				throw new CustomException(HttpStatus.UNAUTHORIZED, "현재 비밀번호가 일치하지 않습니다.");
+			}
+			
+			member.setPwd(passwordEncoder.encode(updateData.getNewPwd()));
+		}
+
+		memberRepository.save(member);
+	}
+
+	// 회원 탈퇴
+	@Transactional
+	public void deleteMember() {
+		String userId = jwtUtil.getLoginId();
+		Member member = memberRepository.findById(userId)
+				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
+
+		// Refresh Token 삭제
+		refreshTokenRepository.deleteByMemberMemId(member.getMemId());
+		
+		// 회원 삭제
+		memberRepository.delete(member);
+		
+		// SecurityContext 초기화
+		SecurityContextHolder.clearContext();
 	}
 }
