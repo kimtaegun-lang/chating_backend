@@ -17,6 +17,7 @@ import com.chating.dto.member.SignInDTO;
 import com.chating.dto.member.SignUpDTO;
 import com.chating.dto.member.UpdateMemberDTO;
 import com.chating.service.member.MemberService;
+import com.chating.util.JwtUtil;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -26,7 +27,7 @@ import lombok.AllArgsConstructor;
 @RequestMapping("member/")
 public class MemberController {
 	private final MemberService memberService;
-	
+	private final JwtUtil jwtUtil;
 	// 회원 가입 로직
 	@PostMapping("signUp")
 	public ResponseEntity<String> signUpUser(@RequestBody @Valid SignUpDTO userData) {
@@ -81,7 +82,8 @@ public class MemberController {
 	@PreAuthorize("isAuthenticated()")
 	@DeleteMapping("deleteMember")
 	public ResponseEntity<Map<String,Object>> deleteMember() {
-		memberService.deleteMember();
+		String userId = jwtUtil.getLoginId();
+		memberService.deleteMember(userId);
 		Map<String,Object> response = new HashMap<>();
 		response.put("message", "회원 탈퇴가 완료되었습니다.");
 		return ResponseEntity.ok(response);

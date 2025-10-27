@@ -75,16 +75,6 @@ public class AdminServiceImpl implements AdminService {
         memberRepository.save(member);
     }
 
-    // 회원 탈퇴
-    @Override
-    @Transactional
-    public void deleteMember(String memberId) {
-        if (!memberRepository.existsById(memberId)) {
-            throw new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다.");
-        }
-
-        memberRepository.deleteById(memberId);
-    }
     
     @Override
     @Transactional

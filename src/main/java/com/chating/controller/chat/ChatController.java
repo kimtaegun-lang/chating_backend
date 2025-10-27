@@ -5,18 +5,18 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chating.dto.chat.BroadcastResDTO;
 import com.chating.dto.chat.ConversationDTO;
 import com.chating.dto.chat.DeleteMessageDTO;
 import com.chating.dto.chat.sendMessageDTO;
+import com.chating.entity.member.Member;
 import com.chating.service.chat.ChatService;
 
 import jakarta.validation.Valid;
@@ -59,5 +59,14 @@ public class ChatController {
 		response.put("message", "채팅 목록 조회 완료");
 		response.put("data", chatService.getMyChatRooms(userId));
 		return ResponseEntity.ok(response);
+	}
+	
+	// 상대 측 탈퇴 여부 확인
+	@GetMapping("/api/chat/receiver-status")
+	public ResponseEntity<Boolean> getReceiverStatus(
+	    @RequestParam("receiverId") String receiverId) {
+	    boolean isActive=chatService.getReceiverStatus(receiverId);
+	    
+	    return ResponseEntity.ok(isActive);
 	}
 }

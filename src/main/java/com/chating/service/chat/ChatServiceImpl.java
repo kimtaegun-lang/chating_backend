@@ -2,6 +2,7 @@ package com.chating.service.chat;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import com.chating.common.CustomException;
 import com.chating.dto.chat.BroadcastResDTO;
 import com.chating.dto.chat.ChatRoomResDTO;
@@ -22,8 +24,10 @@ import com.chating.dto.chat.sendMessageDTO;
 import com.chating.dto.common.PageResponseDTO;
 import com.chating.entity.chat.Chat;
 import com.chating.entity.chat.ChatRoom;
+import com.chating.entity.member.Member;
 import com.chating.repository.chat.ChatRepository;
 import com.chating.repository.chat.ChatRoomRepository;
+import com.chating.repository.member.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,7 +39,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final SimpMessagingTemplate messagingTemplate;
-    
+    private final MemberRepository memberRepository;
     // 메시지 저장
     @Override
     public void saveMessage(sendMessageDTO message) {
@@ -94,6 +98,8 @@ public class ChatServiceImpl implements ChatService {
         messagingTemplate.convertAndSend("/topic/chatroom-" + message.getRoomId(), response);
     }
     
+    
+    
     // 대화 내역 조회
     @Override
     @Transactional(readOnly = true)
@@ -113,7 +119,7 @@ public class ChatServiceImpl implements ChatService {
         {
         	throw new CustomException(HttpStatus.NOT_FOUND,"존재하지 않는 채팅방 입니다.");
         }
-        
+
         int size = conversationDTO.getLimit() > 0 ? conversationDTO.getLimit() : 10;
         Long chatId = conversationDTO.getChatId() > 0 ? (long) conversationDTO.getChatId() : Long.MAX_VALUE;
 
@@ -134,7 +140,9 @@ public class ChatServiceImpl implements ChatService {
             response.setCurrentPage(0);
         }
         return response;
-    }
+    } 
+    
+
 
     // 본인 채팅방 목록 조회
     @Override
@@ -147,4 +155,14 @@ public class ChatServiceImpl implements ChatService {
 
         return chatRoomRepository.findMyChatRooms(userId);
     }
+    
+    public boolean getReceiverStatus(String receiverId) {
+        Optional<Member> member = memberRepository.findById(receiverId);
+        
+        if (member.isPresent()) {
+            return true; // 회원이 존재하면 활성
+        }
+        return false; // 회원이 없으면 비활성
+    }
+    
 }

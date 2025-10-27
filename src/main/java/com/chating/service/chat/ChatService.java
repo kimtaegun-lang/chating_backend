@@ -15,5 +15,5 @@ public interface ChatService {
 	void deleteChat(DeleteMessageDTO message); // 메시지 삭제
 	PageResponseDTO<ConversationResDTO> getConversation(ConversationDTO conversationDTO); // 채팅 내역 조회
 	List<ChatRoomResDTO> getMyChatRooms(String userId); // 본인 채팅방 목록 조회
-	
+	boolean getReceiverStatus(String receiverId); // 수신자 측 회원 탈퇴 여부 확인
 }

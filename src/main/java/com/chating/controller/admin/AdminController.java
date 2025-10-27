@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.chating.dto.admin.StatusDTO;
 import com.chating.dto.common.SearchOptionDTO;
 import com.chating.service.admin.AdminService;
+import com.chating.service.member.MemberService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminController {
     
     private final AdminService adminService;
-    
+    private final MemberService memberService;
     // 전체 회원 조회 (페이징)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/members")
@@ -69,7 +70,7 @@ public class AdminController {
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/members/{memberId}")
     public ResponseEntity<String> deleteMember(@PathVariable("memberId") String memberId) {
-        adminService.deleteMember(memberId);
+        memberService.deleteMember(memberId);
         return ResponseEntity.ok("회원 삭제 완료");
     }
     

@@ -13,5 +13,5 @@ public interface MemberService {
 	public void signOut(); // 로그아웃 로직
 	public MemberInfo getMemberInfo(); // 회원 정보 얻는 로직
 	 void updateMemberInfo(UpdateMemberDTO updateData);  // 회원 정보 수정
-	 void deleteMember();  // 회원 탈퇴
+	 void deleteMember(String userId);  // 회원 탈퇴
 }

@@ -184,8 +184,8 @@ public class MemberServiceImpl implements MemberService {
 
 	// 회원 탈퇴
 	@Transactional
-	public void deleteMember() {
-		String userId = jwtUtil.getLoginId();
+	public void deleteMember(String userId) {
+		
 		Member member = memberRepository.findById(userId)
 				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
 
