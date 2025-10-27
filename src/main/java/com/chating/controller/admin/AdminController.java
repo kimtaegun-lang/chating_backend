@@ -30,6 +30,7 @@ public class AdminController {
     private final AdminService adminService;
     
     // 전체 회원 조회 (페이징)
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/members")
     public ResponseEntity<Map<String, Object>> getMembers(
             @RequestParam(value = "pageCount", defaultValue = "0") int pageCount,
@@ -44,6 +45,7 @@ public class AdminController {
     }
 
     // 회원 상세 조회
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/members/{memberId}")
     public ResponseEntity<Map<String, Object>> getMemberDetail(@PathVariable("memberId") String memberId) {
         Map<String, Object> response = new HashMap<>();
@@ -53,25 +55,30 @@ public class AdminController {
     }
 
     // 회원 정지/해제
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/members/{memberId}/status")
-    public ResponseEntity<Map<String, Object>> updateMemberStatus(
+    public ResponseEntity<String> updateMemberStatus(
             @PathVariable ("memberId") String memberId,
             @RequestBody StatusDTO status) {
         
         adminService.updateStatus(memberId, status.getStatus());
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "회원 상태 변경 완료");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok("회원 상태 변경 완료");
     }
 
     // 회원 삭제
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/members/{memberId}")
-    public ResponseEntity<Map<String, Object>> deleteMember(@PathVariable("memberId") String memberId) {
+    public ResponseEntity<String> deleteMember(@PathVariable("memberId") String memberId) {
         adminService.deleteMember(memberId);
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "회원 삭제 완료");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok("회원 삭제 완료");
+    }
+    
+    // 채팅방 삭제
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/members/deleteRoom/{roomId}")
+    public ResponseEntity<String> deleteRoom(@PathVariable("roomId") Long roomId)
+    {
+    	adminService.deleteRoom(roomId);
+    	return ResponseEntity.ok("채팅방 삭제 완료");
     }
 }

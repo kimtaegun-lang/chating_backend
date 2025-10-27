@@ -4,7 +4,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +15,7 @@ import com.chating.dto.common.PageResponseDTO;
 import com.chating.dto.common.SearchOptionDTO;
 import com.chating.entity.member.Member;
 import com.chating.entity.member.Status;
+import com.chating.repository.chat.ChatRoomRepository;
 import com.chating.repository.member.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,15 +26,17 @@ import lombok.RequiredArgsConstructor;
 public class AdminServiceImpl implements AdminService {
 
     private final MemberRepository memberRepository;
+    private final ChatRoomRepository chatRoomRepository;
     private final ModelMapper modelMapper;
 
+    // 회원 정보 조회
     @Override
     public PageResponseDTO<MemberListDTO> getAllMembers(
             int pageCount, 
             int size, 
             SearchOptionDTO searchOptionDTO) {
         
-        // Pageable 생성 (정렬은 쿼리에서 처리)
+        // Pageable 생성 
         Pageable pageable = PageRequest.of(pageCount, size);
         
         // 검색 쿼리 사용
@@ -53,39 +55,41 @@ public class AdminServiceImpl implements AdminService {
         return new PageResponseDTO<>(dtoPage);
     }
 
+    // 회원 상세정보 조회
     @Override
     public MemberDetailDTO getMemberDetail(String memberId) {
-        // 회원 조회
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
 
-        // Entity -> DTO 변환 (ModelMapper 사용)
         return modelMapper.map(member, MemberDetailDTO.class);
     }
 
+    // 회원 상태 변경
     @Override
     @Transactional
     public void updateStatus(String memberId, Status status) {
-        // 회원 조회
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
 
-        // 상태 변경
         member.setStatus(status);
-
-        // 저장 (더티 체킹으로 자동 업데이트)
         memberRepository.save(member);
     }
 
+    // 회원 탈퇴
     @Override
     @Transactional
     public void deleteMember(String memberId) {
-        // 회원 존재 확인
         if (!memberRepository.existsById(memberId)) {
             throw new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다.");
         }
 
-        // 회원 삭제 (Cascade로 RefreshToken도 자동 삭제됨)
         memberRepository.deleteById(memberId);
+    }
+    
+    @Override
+    @Transactional
+    public void deleteRoom(Long roomId) {
+    	System.out.println(roomId);
+    	chatRoomRepository.deleteById(roomId);
     }
 }

@@ -12,4 +12,5 @@ public interface AdminService {
     MemberDetailDTO getMemberDetail(String memberId); // 상세 회원 조회
     void updateStatus(String memberId, Status status); // 회원 상태 업데이트
     void deleteMember(String memberId); // 회원 삭제
+    void deleteRoom(Long roomId); // 회원 삭제
 }
