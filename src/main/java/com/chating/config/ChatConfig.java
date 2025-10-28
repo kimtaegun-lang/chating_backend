@@ -1,8 +1,11 @@
 package com.chating.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -22,6 +25,16 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 	String rabbitUser = System.getenv("RABBITMQ_USERNAME");
 	String rabbitPass = System.getenv("RABBITMQ_PASSWORD");
 	String frontUrl = System.getenv("FRONTEND_URL");
+	
+	@Bean
+	public TaskScheduler taskScheduler() {
+		ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+		taskScheduler.setPoolSize(1);
+		taskScheduler.setThreadNamePrefix("websocket-heartbeat-");
+		taskScheduler.initialize();
+		return taskScheduler;
+	}
+	
 	  @Override
 	    public void configureMessageBroker(MessageBrokerRegistry config) {
 	        // RabbitMQ STOMP 브로커 설정
@@ -40,7 +53,8 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 	      .setVirtualHost("/"); */
 		  
 			config.enableSimpleBroker("/topic", "/queue")
-			.setHeartbeatValue(new long[] {20000, 20000});
+			.setHeartbeatValue(new long[] {20000, 20000})
+			.setTaskScheduler(taskScheduler());
 	        
 	        config.setApplicationDestinationPrefixes("/app");
 	    }
