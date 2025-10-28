@@ -56,6 +56,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     // Reactor Netty
     implementation("io.projectreactor.netty:reactor-netty:1.1.4")
+    
+    // spring-dotenv 라이브러리 사용
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 }
 
 tasks.named('test') {
