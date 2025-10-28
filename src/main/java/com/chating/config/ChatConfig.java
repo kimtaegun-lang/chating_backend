@@ -17,16 +17,27 @@ import lombok.RequiredArgsConstructor;
 public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 	
 	private final StompHandler stompHandler;
+	String rabbitHost = System.getenv("RABBITMQ_HOST");
+	int rabbitPort = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
+	String rabbitUser = System.getenv("RABBITMQ_USERNAME");
+	String rabbitPass = System.getenv("RABBITMQ_PASSWORD");
 	String frontUrl = System.getenv("FRONTEND_URL");
 	  @Override
 	    public void configureMessageBroker(MessageBrokerRegistry config) {
 	        // RabbitMQ STOMP 브로커 설정
+		  /*
 	        config.enableStompBrokerRelay("/topic", "/queue")
 	                .setRelayHost("localhost")
 	                .setRelayPort(61613)
 	                .setClientLogin("guest")
 	                .setClientPasscode("guest")
-	                .setVirtualHost("/");
+	                .setVirtualHost("/"); */
+		  config.enableStompBrokerRelay("/topic", "/queue")
+	      .setRelayHost(rabbitHost)
+	      .setRelayPort(rabbitPort)
+	      .setClientLogin(rabbitUser)
+	      .setClientPasscode(rabbitPass)
+	      .setVirtualHost("/");
 	        
 	        config.setApplicationDestinationPrefixes("/app");
 	    }
