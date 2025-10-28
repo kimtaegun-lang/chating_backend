@@ -31,13 +31,16 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 	                .setRelayPort(61613)
 	                .setClientLogin("guest")
 	                .setClientPasscode("guest")
-	                .setVirtualHost("/"); */
+	                .setVirtualHost("/"); 
 		  config.enableStompBrokerRelay("/topic", "/queue")
 	      .setRelayHost(rabbitHost)
 	      .setRelayPort(rabbitPort)
 	      .setClientLogin(rabbitUser)
 	      .setClientPasscode(rabbitPass)
-	      .setVirtualHost("/");
+	      .setVirtualHost("/"); */
+		  
+			config.enableSimpleBroker("/topic", "/queue")
+			.setHeartbeatValue(new long[] {20000, 20000});
 	        
 	        config.setApplicationDestinationPrefixes("/app");
 	    }
