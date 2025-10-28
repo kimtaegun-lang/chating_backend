@@ -26,7 +26,7 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final JwtAuthenticationErrorHandler jwtAuthenticationErrorHandler;
-  
+    String frontUrl = System.getenv("FRONTEND_URL");
     // CORS 설정
     @Bean
     public WebMvcConfigurer corsConfigurer() {
@@ -34,7 +34,7 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                    .allowedOrigins("http://localhost:3000","http://localhost:3001")
+                    .allowedOrigins(frontUrl)
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     .allowedHeaders("*");
             }

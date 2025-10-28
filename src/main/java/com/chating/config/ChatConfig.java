@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 	
 	private final StompHandler stompHandler;
+	String frontUrl = System.getenv("FRONTEND_URL");
 	  @Override
 	    public void configureMessageBroker(MessageBrokerRegistry config) {
 	        // RabbitMQ STOMP 브로커 설정
@@ -33,7 +34,7 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 	    @Override
 	    public void registerStompEndpoints(StompEndpointRegistry registry) {
 	        registry.addEndpoint("/ws-chat")
-	                .setAllowedOrigins("http://localhost:3000", "http://localhost:3001")
+	                .setAllowedOrigins(frontUrl)
 	                .withSockJS()
 	                .setDisconnectDelay(30000);
 	    }
