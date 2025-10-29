@@ -27,6 +27,8 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final JwtAuthenticationErrorHandler jwtAuthenticationErrorHandler;
     String frontUrl = System.getenv("FRONTEND_URL");
+   
+    
     // CORS 설정
     @Bean
     public WebMvcConfigurer corsConfigurer() {
@@ -34,14 +36,14 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                    .allowedOrigins(frontUrl)
+                    .allowedOrigins("*")
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     .allowedHeaders("*");
             }
         };
     }
 
-
+    
     // 비밀번호 암호화: BCrypt 단방향 암호화(복호화 불가능)
     @Bean
     public PasswordEncoder passwordEncoder() {
