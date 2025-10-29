@@ -20,6 +20,11 @@ import lombok.RequiredArgsConstructor;
 public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 	
 	private final StompHandler stompHandler;
+	String rabbitHost = System.getenv("RABBITMQ_HOST");
+	int rabbitPort = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
+	String rabbitUser = System.getenv("RABBITMQ_USERNAME");
+	String rabbitPass = System.getenv("RABBITMQ_PASSWORD");
+	String frontUrl = System.getenv("FRONTEND_URL");
 	
 	@Bean
 	public TaskScheduler taskScheduler() {
@@ -30,33 +35,40 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 		return taskScheduler;
 	}
 	
-	@Override
-	public void configureMessageBroker(MessageBrokerRegistry config) {
-		// Simple Broker 사용 (RabbitMQ 불필요)
-		config.enableSimpleBroker("/topic", "/queue")
-			.setTaskScheduler(taskScheduler())
-			.setHeartbeatValue(new long[] {20000, 20000});
-		
-		config.setApplicationDestinationPrefixes("/app");
-	}
-	
-	@Override
-	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		String frontUrl = System.getenv("FRONTEND_URL");
-		
-		System.out.println("====================================");
-		System.out.println("🔌 WebSocket CORS 설정");
-		System.out.println("🌐 FRONTEND_URL: " + frontUrl);
-		System.out.println("====================================");
-		
-		registry.addEndpoint("/ws-chat")
-			.setAllowedOrigins(frontUrl)
-			.withSockJS()
-			.setHeartbeatTime(25000);
-	}
-	
-	@Override
-	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.interceptors(stompHandler);
-	}
+	  @Override
+	    public void configureMessageBroker(MessageBrokerRegistry config) {
+	        // RabbitMQ STOMP 브로커 설정
+		  /*
+	        config.enableStompBrokerRelay("/topic", "/queue")
+	                .setRelayHost("localhost")
+	                .setRelayPort(61613)
+	                .setClientLogin("guest")
+	                .setClientPasscode("guest")
+	                .setVirtualHost("/"); 
+		  config.enableStompBrokerRelay("/topic", "/queue")
+	      .setRelayHost(rabbitHost)
+	      .setRelayPort(rabbitPort)
+	      .setClientLogin(rabbitUser)
+	      .setClientPasscode(rabbitPass)
+	      .setVirtualHost("/"); */
+		  
+			config.enableSimpleBroker("/topic", "/queue")
+			.setHeartbeatValue(new long[] {20000, 20000})
+			.setTaskScheduler(taskScheduler());
+	        
+	        config.setApplicationDestinationPrefixes("/app");
+	    }
+
+	    @Override
+	    public void registerStompEndpoints(StompEndpointRegistry registry) {
+	        registry.addEndpoint("/ws-chat")
+	                .setAllowedOrigins(frontUrl)
+	                .withSockJS()
+	                .setDisconnectDelay(30000);
+	    }
+
+	    @Override
+	    public void configureClientInboundChannel(ChannelRegistration registration) {
+	        registration.interceptors(stompHandler);
+	    }
 }
