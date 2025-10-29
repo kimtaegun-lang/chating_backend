@@ -12,8 +12,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.chating.security.JwtAuthenticationErrorHandler;
 import com.chating.util.JwtAuthenticationFilter;
@@ -33,7 +34,7 @@ public class SecurityConfig {
     private String frontUrl;
    
     
-    // CORS 설정
+    /* CORS 설정
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         System.out.println("FRONTEND_URL: " + frontUrl);
@@ -46,6 +47,18 @@ public class SecurityConfig {
                     .allowedHeaders("*");
             }
         };
+    } */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin(frontUrl); // FRONTEND_URL
+        configuration.addAllowedMethod("*");      // GET, POST, PUT, DELETE, OPTIONS 모두 허용
+        configuration.addAllowedHeader("*");      // 모든 헤더 허용
+        configuration.setAllowCredentials(true);  // 쿠키/인증 허용
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     
@@ -64,7 +77,8 @@ public class SecurityConfig {
     // HTTP 요청에만 사용됨 Spring Security 보안 설정
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-       return http .cors(cors -> {})
+    	System.out.println("FRONTEND_URL 필터버전입니다.: " + frontUrl);
+       return http .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         	// csrf 기능 disabled
             .csrf(csrf -> csrf.disable())
             // 서버가 셰션을 저장하지 않음
