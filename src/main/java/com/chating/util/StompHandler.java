@@ -65,13 +65,6 @@ public class StompHandler implements ChannelInterceptor {
                     throw new IllegalStateException("다른 사용자의 큐를 구독할 수 없습니다.");
                 }
                 
-                if (destination.startsWith("/topic/chatroom-")) {
-                    // TODO: 채팅방 멤버 확인 로직 추가
-                    // String roomId = destination.replace("/topic/chatroom-", "");
-                    // if (!chatRoomService.isMember(roomId, userId)) {
-                    //     throw new IllegalStateException("해당 채팅방에 접근 권한이 없습니다.");
-                    // }
-                }
             }
         }
         

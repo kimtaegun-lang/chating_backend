@@ -52,8 +52,10 @@ dependencies {
     // model mapper
     implementation 'org.modelmapper:modelmapper:3.1.0'
     
-    // rabbitmq
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+  
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'io.lettuce:lettuce-core'
+
     // Reactor Netty
     implementation("io.projectreactor.netty:reactor-netty:1.1.4")
     

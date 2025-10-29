@@ -1,5 +1,6 @@
 package com.chating.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,21 +28,20 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final JwtAuthenticationErrorHandler jwtAuthenticationErrorHandler;
-    String frontUrl = System.getenv("FRONTEND_URL");
+  
+    @Value("${FRONTEND_URL}")
+    private String frontUrl;
    
     
     // CORS 설정
     @Bean
     public WebMvcConfigurer corsConfigurer() {
-    	System.out.println("====================================");
-        System.out.println("🛡️ SecurityConfig CORS 설정");
-        System.out.println("🌐 FRONTEND_URL: " + frontUrl);
-        System.out.println("====================================");
+        System.out.println("FRONTEND_URL: " + frontUrl);
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                    .allowedOrigins(frontUrl)
+                    .allowedOrigins("http://localhost:3000","http://localhost:3001","http://localhost:3002")
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     .allowedHeaders("*");
             }
