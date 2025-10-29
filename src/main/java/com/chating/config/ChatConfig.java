@@ -1,5 +1,6 @@
 package com.chating.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -16,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 
+    @Value("${FRONTEND_URL}")
+    private String frontUrl;
     private final StompHandler stompHandler;
 
     @Override
@@ -26,9 +29,8 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        String frontUrl = System.getenv("FRONTEND_URL");
         registry.addEndpoint("/ws-chat")
-            .setAllowedOrigins("http://localhost:3000","http://localhost:3001","http://localhost:3002")
+            .setAllowedOrigins(frontUrl)
             .withSockJS()
             .setHeartbeatTime(25000);
     }
