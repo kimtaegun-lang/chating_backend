@@ -24,26 +24,20 @@ public class StompHandler implements ChannelInterceptor {
         
         // CONNECT: 토큰 검증 및 세션 저장
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            String authHeader = accessor.getFirstNativeHeader("Authorization");
+            // Handshake에서 저장한 userId와 token 가져오기
+            String userId = (String) accessor.getSessionAttributes().get("userId");
+            String token = (String) accessor.getSessionAttributes().get("token");
             
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
+            if (userId != null && token != null) {
+                accessor.setUser(new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>()));
                 
-                if (jwtUtil.isTokenValid(token)) {
-                    String userId = jwtUtil.extractUsername(token);
-                    
-                    accessor.getSessionAttributes().put("userId", userId);
-                    accessor.getSessionAttributes().put("token", token);
-                    accessor.setUser(new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>()));
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                    System.out.println("STOMP user: " + accessor.getUser().getName());
-                    System.out.println("WebSocket 인증 성공: " + userId);
-                } else {
-                    System.out.println("WebSocket 인증 실패: 유효하지 않은 토큰");
-                }
+                UsernamePasswordAuthenticationToken auth = 
+                    new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
+                SecurityContextHolder.getContext().setAuthentication(auth);
+                
+                System.out.println("STOMP CONNECT 성공: " + userId);
             } else {
-                System.out.println("WebSocket 인증 실패: 토큰 없음");
+                System.out.println("STOMP CONNECT 실패: Handshake에서 인증 정보 없음");
             }
         }
         
@@ -64,7 +58,6 @@ public class StompHandler implements ChannelInterceptor {
                     && !destination.equals("/queue/match-" + userId)) {
                     throw new IllegalStateException("다른 사용자의 큐를 구독할 수 없습니다.");
                 }
-                
             }
         }
         

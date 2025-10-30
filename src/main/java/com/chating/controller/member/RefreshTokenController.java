@@ -1,15 +1,16 @@
 package com.chating.controller.member;
 
-import java.util.Map;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.chating.common.CustomException;
 import com.chating.entity.member.Role;
 import com.chating.util.JwtUtil;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -20,22 +21,26 @@ public class RefreshTokenController {
     private final JwtUtil jwtUtil;
     
     @PostMapping("/api/refresh")
-    public ResponseEntity<?> refreshAccessToken(@RequestBody Map<String, String> requestBody) {
-        String refreshToken = requestBody.get("refreshToken");
+    public ResponseEntity<String> refreshAccessToken(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response) {
         
+    	System.out.println(refreshToken+"토큰이다1!!!!");
         if (refreshToken == null || !jwtUtil.isTokenValid(refreshToken)) {
-            return ResponseEntity.status(HttpServletResponse.SC_FORBIDDEN)
-                .body(Map.of(
-                    "error", "REFRESH_TOKEN_EXPIRED",
-                    "message", "세션이 만료되었습니다. 다시 로그인해주세요."
-                ));
+        	throw new CustomException(HttpStatus.FORBIDDEN, "세션이 만료되었습니다. 다시 로그인 해주세요.");
         }
+
+        String newAccessToken = jwtUtil.generateAccessToken(jwtUtil.extractUsername(refreshToken), Role.USER);
         
-        String username = jwtUtil.extractUsername(refreshToken);
-        String newAccessToken = jwtUtil.generateAccessToken(username,Role.USER);
+        Cookie accessCookie = new Cookie("accessToken", newAccessToken);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(30 * 60);
         
-        System.out.println("토큰 재발급 완료: " + username);
-        
-        return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
+        response.addCookie(accessCookie);
+        System.out.println("토큰 재발급 완료");
+
+        return ResponseEntity.ok("토큰 재발급 완료");
     }
 }

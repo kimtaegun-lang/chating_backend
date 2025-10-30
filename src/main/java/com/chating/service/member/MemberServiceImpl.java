@@ -1,11 +1,8 @@
 package com.chating.service.member;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -18,8 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.chating.common.CustomException;
-import com.chating.dto.member.MemberInfo;
+import com.chating.dto.member.MemberInfoDTO;
 import com.chating.dto.member.SignInDTO;
+import com.chating.dto.member.SignInResDTO;
 import com.chating.dto.member.SignUpDTO;
 import com.chating.dto.member.UpdateMemberDTO;
 import com.chating.entity.member.Member;
@@ -45,6 +43,7 @@ public class MemberServiceImpl implements MemberService {
 
 	// 회원 가입 로직
 	@Transactional
+	@Override
 	public void signUpUser(SignUpDTO userData) {
 		// 아이디 중복 체크
 		if (memberRepository.existsByMemId(userData.getMemId())) {
@@ -74,55 +73,55 @@ public class MemberServiceImpl implements MemberService {
 		memberRepository.save(member);
 	}
 
-	// 로그인
+	
+	 // 로그인
 	@Transactional
-	public Map<String, String> signIn(SignInDTO userData) {
-		try {
-			// Member 조회
-			Member member = memberRepository.findById(userData.getMemId())
-					.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
+	@Override
+	public SignInResDTO signIn(SignInDTO userData) {
+	    Member member = memberRepository.findById(userData.getMemId())
+	            .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "아이디가 일치하지 않습니다."));
 
-			if (member.getStatus() == Status.BANNED) {
-			    throw new CustomException(HttpStatus.FORBIDDEN, "이 계정은 이용이 정지되었습니다.");
-			}
-			
-			Authentication authentication = authenticationManager
-					.authenticate(new UsernamePasswordAuthenticationToken(userData.getMemId(), userData.getPwd()));
+	    if (member.getStatus() == Status.BANNED) {
+	        throw new CustomException(HttpStatus.FORBIDDEN, "이 계정은 이용이 정지되었습니다.");
+	    }
 
-			// securityContext에 인증 정보 저장
-			SecurityContextHolder.getContext().setAuthentication(authentication);
 
-			String accessToken = jwtUtil.generateAccessToken(userData.getMemId(), Role.USER);
-			String refreshToken = jwtUtil.generateRefreshToken(userData.getMemId());
+	    try {
+	        Authentication authentication = authenticationManager.authenticate(
+	                new UsernamePasswordAuthenticationToken(userData.getMemId(), userData.getPwd())
+	        );
+	        SecurityContextHolder.getContext().setAuthentication(authentication);
+	    } catch (BadCredentialsException e) {
+	        throw new CustomException(HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다.");
+	    }
 
-			// refresh token 제어
-			List<RefreshToken> existingTokens = refreshTokenRepository.findAllByMemberMemId(userData.getMemId());
-			if (existingTokens.size() >= 5) { // 최대 5개 허용
-				RefreshToken oldest = existingTokens.stream().min(Comparator.comparing(RefreshToken::getCreatedTime))
-						.orElseThrow();
-				refreshTokenRepository.delete(oldest);
-			}
+	    String accessToken = jwtUtil.generateAccessToken(userData.getMemId(), member.getRole());
+	    String refreshToken = jwtUtil.generateRefreshToken(userData.getMemId());
 
-			// 새 리프레시 토큰 저장
-			RefreshToken newRefreshToken = RefreshToken.builder().member(member).token(refreshToken)
-					.exiredTime(LocalDateTime.now().plus(7, ChronoUnit.DAYS)).createdTime(LocalDateTime.now()).build();
-			refreshTokenRepository.save(newRefreshToken);
+	    // refresh token 관리
+	    List<RefreshToken> existingTokens = refreshTokenRepository.findAllByMemberMemId(userData.getMemId());
+	    if (existingTokens.size() >= 5) {
+	        RefreshToken oldest = existingTokens.stream()
+	                .min(Comparator.comparing(RefreshToken::getCreatedTime))
+	                .orElseThrow();
+	        refreshTokenRepository.delete(oldest);
+	    }
 
-			// 토큰 반환
-			Map<String, String> tokens = new HashMap<>();
-			tokens.put("accessToken", accessToken);
-			tokens.put("refreshToken", refreshToken);
-			tokens.put("memId", member.getMemId());
-			tokens.put("name", member.getName());
-			tokens.put("role", member.getRole().toString());
-			return tokens;
+	    refreshTokenRepository.save(
+	        RefreshToken.builder()
+	            .member(member)
+	            .token(refreshToken)
+	            .exiredTime(LocalDateTime.now().plusDays(7))
+	            .createdTime(LocalDateTime.now())
+	            .build()
+	    );
 
-		} catch (BadCredentialsException e) {
-			throw new CustomException(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호가 올바르지 않습니다.");
-		}
+	    return new SignInResDTO(accessToken,refreshToken);
 	}
-
+	
+	// 로그 아웃
 	@Transactional
+	@Override
 	public void signOut() {
 		String userId = jwtUtil.getLoginId();
 		Member member = memberRepository.findById(userId)
@@ -130,15 +129,10 @@ public class MemberServiceImpl implements MemberService {
 		refreshTokenRepository.deleteByMemberMemId(member.getMemId());
 	}
 
-	public MemberInfo getMemberInfo() {
-		String userId = jwtUtil.getLoginId();
-		Member member = memberRepository.findById(userId)
-				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
-		return modelMapper.map(member, MemberInfo.class);
-	}
-	
+
 	// 회원 정보 수정
 	@Transactional
+	@Override
 	public void updateMemberInfo(UpdateMemberDTO updateData) {
 		String userId = jwtUtil.getLoginId();
 		Member member = memberRepository.findById(userId)
@@ -171,11 +165,11 @@ public class MemberServiceImpl implements MemberService {
 			if (updateData.getCurrentPwd() == null || updateData.getCurrentPwd().isEmpty()) {
 				throw new CustomException(HttpStatus.BAD_REQUEST, "현재 비밀번호를 입력해주세요.");
 			}
-			
+
 			if (!passwordEncoder.matches(updateData.getCurrentPwd(), member.getPwd())) {
 				throw new CustomException(HttpStatus.UNAUTHORIZED, "현재 비밀번호가 일치하지 않습니다.");
 			}
-			
+
 			member.setPwd(passwordEncoder.encode(updateData.getNewPwd()));
 		}
 
@@ -184,18 +178,35 @@ public class MemberServiceImpl implements MemberService {
 
 	// 회원 탈퇴
 	@Transactional
+	@Override
 	public void deleteMember(String userId) {
-		
+
 		Member member = memberRepository.findById(userId)
 				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
 
 		// Refresh Token 삭제
 		refreshTokenRepository.deleteByMemberMemId(member.getMemId());
-		
+
 		// 회원 삭제
 		memberRepository.delete(member);
-		
+
 		// SecurityContext 초기화
 		SecurityContextHolder.clearContext();
+	}
+	
+	 // accesstoken 검증 및 회원 정보 전달
+	@Transactional
+	@Override
+	 public MemberInfoDTO validateAndGetUserInfo(String accessToken) {
+		if(!jwtUtil.isTokenValid(accessToken))
+		{
+			throw new CustomException(HttpStatus.UNAUTHORIZED,"정보가 올바르지 않습니다. 다시 로그인해주세요.");
+		}
+		String memberId=jwtUtil.getLoginId();
+		Member member = memberRepository.findById(memberId)
+				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
+		
+		MemberInfoDTO memberInfo=modelMapper.map(member,MemberInfoDTO.class);
+		return memberInfo;
 	}
 }

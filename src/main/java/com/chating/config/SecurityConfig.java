@@ -77,20 +77,12 @@ public class SecurityConfig {
     // HTTP 요청에만 사용됨 Spring Security 보안 설정
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    	System.out.println("FRONTEND_URL 필터버전입니다.: " + frontUrl);
        return http .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        	// csrf 기능 disabled
             .csrf(csrf -> csrf.disable())
-            // 서버가 셰션을 저장하지 않음
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // 토큰 없이 접근 가능한 경로 설정
             .authorizeHttpRequests(authz -> authz
-            	.requestMatchers("/member/signUp").permitAll()
-            	.requestMatchers("/member/signIn").permitAll()
-            	.requestMatchers("/api/refresh").permitAll()
-            	.requestMatchers("/h2-console/**").permitAll()
-            	.requestMatchers("/ws-chat/**").permitAll()
-              .anyRequest().authenticated()
+                .requestMatchers(SecurityConstants.PUBLIC_PATHS).permitAll()
+                .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
                     .authenticationEntryPoint(jwtAuthenticationErrorHandler) 

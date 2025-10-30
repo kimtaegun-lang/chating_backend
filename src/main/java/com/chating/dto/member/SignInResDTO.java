@@ -8,6 +8,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class SignInResDTO {
-	private Map<String,String> tokens; // access 토큰 및 refresh 토큰
-	private String message; // 메세지
+    private String accessToken;
+    private String refreshToken;
 }

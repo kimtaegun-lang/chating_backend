@@ -22,9 +22,11 @@ public class JwtUtil {
     @Value("${jwt.secret:your-super-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm}")
     private String secretKey;
 
+    //@Value("${jwt.expiration:5000}")
     @Value("${jwt.expiration:86400000}")
     private long expirationTime;
 
+    //@Value("${jwt.expiration:5000}")
     @Value("${jwt.expiration:604800000}")
     private long refreshExpirationTime;
     
@@ -83,7 +85,7 @@ public class JwtUtil {
         }
     }
     
-    // 현재 로그인 한 아이디 반환 (안전 버전)
+    // 현재 로그인 한 아이디 반환 
     public String getLoginId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -94,7 +96,7 @@ public class JwtUtil {
         return auth.getName();
     }
 
-    // 현재 로그인 한 아이디 반환 (안전 버전)
+    // 현재 로그인 한 아이디 반환 
     public String getRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
