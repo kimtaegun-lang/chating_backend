@@ -156,6 +156,7 @@ public class ChatServiceImpl implements ChatService {
         return chatRoomRepository.findMyChatRooms(userId);
     }
     
+    // 상대측 상태 확인
     public boolean getReceiverStatus(String receiverId) {
         Optional<Member> member = memberRepository.findById(receiverId);
         

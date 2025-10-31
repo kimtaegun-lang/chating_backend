@@ -45,7 +45,6 @@ public class MemberController {
 	public ResponseEntity<String> signIn(
 	        @RequestBody @Valid SignInDTO userData,
 	        HttpServletResponse response) {
-
 	    // 서비스에서 토큰 반환
 	    SignInResDTO dto = memberService.signIn(userData);
 
@@ -72,12 +71,32 @@ public class MemberController {
 	
 	// 로그아웃 로직
 	@PreAuthorize("isAuthenticated()")
-	@PostMapping("signOut")
-	public ResponseEntity<String> signOut()
-	{
-		memberService.signOut();
-		return ResponseEntity.ok("로그아웃이 완료 되었습니다.");
+	@PostMapping("/signOut")
+	public ResponseEntity<String> signOut(HttpServletResponse response) {
+
+	    memberService.signOut();
+
+	    // accessToken 쿠키 만료
+	    Cookie accessCookie = new Cookie("accessToken", null);
+	    accessCookie.setHttpOnly(true);
+	    accessCookie.setSecure(true);
+	    accessCookie.setPath("/");
+	    accessCookie.setMaxAge(0); // 즉시 만료
+
+	    // refreshToken 쿠키 만료
+	    Cookie refreshCookie = new Cookie("refreshToken", null);
+	    refreshCookie.setHttpOnly(true);
+	    refreshCookie.setSecure(true);
+	    refreshCookie.setPath("/");
+	    refreshCookie.setMaxAge(0); // 즉시 만료
+
+	    // 응답에 만료된 쿠키 추가
+	    response.addCookie(accessCookie);
+	    response.addCookie(refreshCookie);
+
+	    return ResponseEntity.ok("로그아웃이 완료되었습니다.");
 	}
+
 	
 	
 	// 회원 정보 수정
@@ -102,6 +121,7 @@ public class MemberController {
 	}
 	
 	// 회원 검증
+	@PreAuthorize("isAuthenticated()")
 	@GetMapping("auth/check")
 	public ResponseEntity<Map<String,Object>> checkAuth(@CookieValue(name = "accessToken") String token) {
 	    // 토큰 검증 + 사용자 정보 반환

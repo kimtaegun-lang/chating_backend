@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StatusDTO {
-	private String memId;
-	private Status status;
+	private String memId; // 아이디
+	private Status status; // 상태
 }

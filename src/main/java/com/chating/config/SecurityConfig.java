@@ -33,21 +33,6 @@ public class SecurityConfig {
     @Value("${FRONTEND_URL}")
     private String frontUrl;
    
-    
-    /* CORS 설정
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        System.out.println("FRONTEND_URL: " + frontUrl);
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                    .allowedOrigins(frontUrl)
-                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                    .allowedHeaders("*");
-            }
-        };
-    } */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

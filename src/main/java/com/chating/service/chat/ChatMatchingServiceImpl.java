@@ -31,6 +31,8 @@ public class ChatMatchingServiceImpl implements ChatMatchingService {
 	// 방 생성
 	@Override
 	public Long createChatRoom(String user1, String user2) {
+		RLock lock = redissonClient.getLock("chat:matching:lock");
+		
 		if (user1 == null || user1.trim().isEmpty())
 			throw new IllegalArgumentException("발신자 정보 필요");
 		if (user2 == null || user2.trim().isEmpty())

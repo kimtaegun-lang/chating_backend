@@ -37,8 +37,6 @@ public class AdminController {
             @RequestParam(value = "pageCount", defaultValue = "0") int pageCount,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @ModelAttribute(value="searchOption") SearchOptionDTO searchOptionDTO) {
-        
-    	System.out.println(searchOptionDTO);
         Map<String, Object> response = new HashMap<>();
         response.put("data", adminService.getAllMembers(pageCount, size,searchOptionDTO));
         response.put("message", "회원 목록 조회 완료");

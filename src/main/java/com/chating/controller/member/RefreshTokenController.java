@@ -25,7 +25,6 @@ public class RefreshTokenController {
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response) {
         
-    	System.out.println(refreshToken+"토큰이다1!!!!");
         if (refreshToken == null || !jwtUtil.isTokenValid(refreshToken)) {
         	throw new CustomException(HttpStatus.FORBIDDEN, "세션이 만료되었습니다. 다시 로그인 해주세요.");
         }

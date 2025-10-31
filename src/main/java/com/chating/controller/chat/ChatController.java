@@ -62,6 +62,7 @@ public class ChatController {
 	}
 	
 	// 상대 측 탈퇴 여부 확인
+	@PreAuthorize("isAuthenticated()")
 	@GetMapping("/api/chat/receiver-status")
 	public ResponseEntity<Boolean> getReceiverStatus(
 	    @RequestParam("receiverId") String receiverId) {
