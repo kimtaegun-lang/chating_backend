@@ -3,6 +3,8 @@ package com.chating.controller.member;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -48,6 +50,7 @@ public class MemberController {
 	    // 서비스에서 토큰 반환
 	    SignInResDTO dto = memberService.signIn(userData);
 
+	    /*
 	    // 쿠키 생성
 	    Cookie accessCookie = new Cookie("accessToken", dto.getAccessToken());
 	    accessCookie.setHttpOnly(true);  // JS 접근 불가
@@ -60,10 +63,28 @@ public class MemberController {
 	    refreshCookie.setSecure(true);
 	    refreshCookie.setPath("/");
 	    refreshCookie.setMaxAge(7 * 24 * 60 * 60);
+	*/
+	    ResponseCookie accessCookie = ResponseCookie.from("accessToken", dto.getAccessToken())
+	            .httpOnly(true)
+	            .secure(true)
+	            .sameSite("None")  // 👈 HTTPS 환경 필수
+	            .path("/")
+	            .maxAge(30 * 60)
+	            .build();
 
-	    // 응답에 쿠키 추가
-	    response.addCookie(accessCookie);
-	    response.addCookie(refreshCookie);
+	    ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", dto.getRefreshToken())
+	            .httpOnly(true)
+	            .secure(true)
+	            .sameSite("None")
+	            .path("/")
+	            .maxAge(7 * 24 * 60 * 60)
+	            .build();
+
+	    /* 응답에 쿠키 추가
+	   response.addCookie(accessCookie);
+	    response.addCookie(refreshCookie); */
+	    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+	    response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
 	    return ResponseEntity.ok("로그인이 완료되었습니다.");
 	}
@@ -75,7 +96,7 @@ public class MemberController {
 	public ResponseEntity<String> signOut(HttpServletResponse response) {
 
 	    memberService.signOut();
-
+	    /*
 	    // accessToken 쿠키 만료
 	    Cookie accessCookie = new Cookie("accessToken", null);
 	    accessCookie.setHttpOnly(true);
@@ -92,7 +113,26 @@ public class MemberController {
 
 	    // 응답에 만료된 쿠키 추가
 	    response.addCookie(accessCookie);
-	    response.addCookie(refreshCookie);
+	    response.addCookie(refreshCookie); */
+	    
+	    ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
+	            .httpOnly(true)
+	            .secure(true)
+	            .sameSite("None")
+	            .path("/")
+	            .maxAge(0) // 즉시 만료
+	            .build();
+
+	    ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
+	            .httpOnly(true)
+	            .secure(true)
+	            .sameSite("None")
+	            .path("/")
+	            .maxAge(0)
+	            .build();
+
+	    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+	    response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
 	    return ResponseEntity.ok("로그아웃이 완료되었습니다.");
 	}
