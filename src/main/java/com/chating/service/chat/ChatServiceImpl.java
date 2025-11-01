@@ -1,7 +1,6 @@
 package com.chating.service.chat;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
@@ -15,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.chating.common.CustomException;
+import com.chating.dto.admin.MemberListDTO;
 import com.chating.dto.chat.BroadcastResDTO;
 import com.chating.dto.chat.ChatRoomResDTO;
 import com.chating.dto.chat.ConversationDTO;
@@ -147,13 +147,23 @@ public class ChatServiceImpl implements ChatService {
     // 본인 채팅방 목록 조회
     @Override
     @Transactional(readOnly = true)
-    public List<ChatRoomResDTO> getMyChatRooms(String userId) {
-        // 간단한 검증만 남김
+    public PageResponseDTO<ChatRoomResDTO> getMyChatRooms(String userId,int pageCount,int size) {
         if (userId == null || userId.trim().isEmpty()) {
             throw new CustomException(HttpStatus.BAD_REQUEST,"존재하지 않는 회원 입니다.");
         }
 
-        return chatRoomRepository.findMyChatRooms(userId);
+        Pageable pageable=PageRequest.of(pageCount, size);
+        
+        // 검색 쿼리 사용
+        Page<ChatRoom> chatRoomPage = chatRoomRepository. findMyChatRooms(pageable,userId);
+        
+        System.out.println(chatRoomPage.getContent());
+        // Entity -> DTO 변환
+        Page<ChatRoomResDTO> dtoPage = chatRoomPage.map(chatroom ->
+                modelMapper.map(chatroom, ChatRoomResDTO.class)
+        );
+        
+        return new PageResponseDTO<>(dtoPage);
     }
     
     // 상대측 상태 확인

@@ -12,7 +12,6 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.chating.config.SecurityConstants;
-import com.chating.security.JwtAuthenticationErrorHandler;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-    private final JwtAuthenticationErrorHandler errorHandler;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
@@ -74,10 +72,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(username, null, authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else {
-                // 토큰이 유효하지 않으면 에러 처리
-                errorHandler.handleInvalidToken(response);
-                return;
             }
         }
 

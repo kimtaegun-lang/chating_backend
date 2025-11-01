@@ -1,5 +1,8 @@
 package com.chating.controller.member;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -11,34 +14,52 @@ import com.chating.entity.member.Role;
 import com.chating.util.JwtUtil;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 public class RefreshTokenController {
-    
+
     private final JwtUtil jwtUtil;
     
+    // IP별 마지막 요청 시간 저장
+    private final Map<String, Long> lastRequestTime = new ConcurrentHashMap<>();
+
     @PostMapping("/api/refresh")
     public ResponseEntity<String> refreshAccessToken(
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletRequest request,
             HttpServletResponse response) {
+
+        // Rate Limiting: 5초에 1번만 허용
+        String ip = request.getRemoteAddr();
+        long currentTime = System.currentTimeMillis();
         
+        Long lastTime = lastRequestTime.get(ip);
+        if (lastTime != null && currentTime - lastTime < 5000) {
+            throw new CustomException(HttpStatus.TOO_MANY_REQUESTS, "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
+        }
+        
+        lastRequestTime.put(ip, currentTime);
+
+        // RefreshToken 검증
         if (refreshToken == null || !jwtUtil.isTokenValid(refreshToken)) {
-        	throw new CustomException(HttpStatus.FORBIDDEN, "세션이 만료되었습니다. 다시 로그인 해주세요.");
+            throw new CustomException(HttpStatus.FORBIDDEN, "세션이 만료되었습니다. 다시 로그인 해주세요.");
         }
 
+        // 새로운 AccessToken 생성
         String newAccessToken = jwtUtil.generateAccessToken(jwtUtil.extractUsername(refreshToken), Role.USER);
-        
+
         Cookie accessCookie = new Cookie("accessToken", newAccessToken);
         accessCookie.setHttpOnly(true);
         accessCookie.setSecure(true);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(30 * 60);
-        
+
         response.addCookie(accessCookie);
-        System.out.println("토큰 재발급 완료");
+        System.out.println("토큰 재발급 완료 - IP: " + ip);
 
         return ResponseEntity.ok("토큰 재발급 완료");
     }
