@@ -38,7 +38,7 @@ public class RefreshTokenController {
         long currentTime = System.currentTimeMillis();
         
         Long lastTime = lastRequestTime.get(ip);
-        if (lastTime != null && currentTime - lastTime < 5000) {
+        if (lastTime != null && currentTime - lastTime < 1000) {
             throw new CustomException(HttpStatus.TOO_MANY_REQUESTS, "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
         }
         

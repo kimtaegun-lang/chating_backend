@@ -19,24 +19,26 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
-  
+
     private final MemberRepository memberRepository;
-    
+
     @Override
     public UserDetails loadUserByUsername(String memId) throws UsernameNotFoundException {
         Member member = memberRepository.findByMemId(memId)
-            .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
-        
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+        // Security에서 사용하는 UserDetails 객체로 변환하여 반환
         return User.builder()
-            .username(member.getMemId()) // 아이디
-            .password(member.getPwd())  // 암호화된 비밀번호
-            .authorities(getAuthorities(member))  // 권한 설정
-            .build();
+                .username(member.getMemId())      // 로그인 아이디
+                .password(member.getPwd())        // 암호화된 비밀번호
+                .authorities(getAuthorities(member)) // 권한(ROLE)
+                .build();
     }
-    
-    // 권한 설정
+
+
     private Collection<? extends GrantedAuthority> getAuthorities(Member member) {
-        return Collections.singleton( // 한 사용자당 권한을 한 개씩 밖게 못 가지므로 singleton 사용
-            new SimpleGrantedAuthority("ROLE_" + member.getRole().name())); // .name은 enum타입을 문자로 변환
+        return Collections.singleton(
+                new SimpleGrantedAuthority("ROLE_" + member.getRole().name())
+        );
     }
 }
