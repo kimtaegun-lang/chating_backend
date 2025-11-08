@@ -15,10 +15,6 @@ public class ModelMapperConfig {
 	public ModelMapper modelMapper() {
 	    ModelMapper modelMapper = new ModelMapper();
 	    
-	    // ChatRoom -> ChatRoomResDTO 매핑 규칙 추가
-	    modelMapper.typeMap(ChatRoom.class, ChatRoomResDTO.class)
-	        .addMapping(ChatRoom::getUser2, ChatRoomResDTO::setReceiver);
-	    
 	    return modelMapper;
 	}
 	

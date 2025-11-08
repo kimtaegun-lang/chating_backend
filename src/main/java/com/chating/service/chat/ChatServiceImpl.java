@@ -143,26 +143,30 @@ public class ChatServiceImpl implements ChatService {
     } 
     
 
-
-    // 본인 채팅방 목록 조회
+ // 본인 채팅방 목록 조회
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDTO<ChatRoomResDTO> getMyChatRooms(String userId,int pageCount,int size) {
+    public PageResponseDTO<ChatRoomResDTO> getMyChatRooms(String userId, int pageCount, int size) {
         if (userId == null || userId.trim().isEmpty()) {
-            throw new CustomException(HttpStatus.BAD_REQUEST,"존재하지 않는 회원 입니다.");
+            throw new CustomException(HttpStatus.BAD_REQUEST, "존재하지 않는 회원 입니다.");
         }
 
-        Pageable pageable=PageRequest.of(pageCount, size);
-        
-        // 검색 쿼리 사용
-        Page<ChatRoom> chatRoomPage = chatRoomRepository. findMyChatRooms(pageable,userId);
-        
-        System.out.println(chatRoomPage.getContent());
+        Pageable pageable = PageRequest.of(pageCount, size);
+        Page<ChatRoom> chatRoomPage = chatRoomRepository.findMyChatRooms(pageable, userId);
+
         // Entity -> DTO 변환
-        Page<ChatRoomResDTO> dtoPage = chatRoomPage.map(chatroom ->
-                modelMapper.map(chatroom, ChatRoomResDTO.class)
-        );
-        
+        Page<ChatRoomResDTO> dtoPage = chatRoomPage.map(chatroom -> {
+            ChatRoomResDTO dto = modelMapper.map(chatroom, ChatRoomResDTO.class);
+            
+            if (userId.equals(chatroom.getUser1())) {
+                dto.setReceiver(chatroom.getUser2());
+            } else {
+                dto.setReceiver(chatroom.getUser1());
+            }
+            
+            return dto;
+        });
+
         return new PageResponseDTO<>(dtoPage);
     }
     

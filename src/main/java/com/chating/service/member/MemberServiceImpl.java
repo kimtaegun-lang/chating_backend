@@ -85,7 +85,6 @@ public class MemberServiceImpl implements MemberService {
 	        throw new CustomException(HttpStatus.FORBIDDEN, "이 계정은 이용이 정지되었습니다.");
 	    }
 
-
 	    try {
 	        Authentication authentication = authenticationManager.authenticate(
 	                new UsernamePasswordAuthenticationToken(userData.getMemId(), userData.getPwd())

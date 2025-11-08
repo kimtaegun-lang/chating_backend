@@ -39,6 +39,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin(frontUrl); // FRONTEND_URL
         configuration.addAllowedOrigin("http://localhost:3000/");
+        configuration.addAllowedOrigin("http://localhost:3001/");
         configuration.addAllowedMethod("*");      // GET, POST, PUT, DELETE, OPTIONS 모두 허용
         configuration.addAllowedHeader("*");      // 모든 헤더 허용
         configuration.setAllowCredentials(true);  // 쿠키/인증 허용
