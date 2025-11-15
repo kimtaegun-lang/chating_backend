@@ -64,6 +64,9 @@ dependencies {
     
     // Redisson lock
     implementation 'org.redisson:redisson-spring-boot-starter:3.23.5'
+    
+    // amqp
+     implementation 'org.springframework.boot:spring-boot-starter-amqp'
 }
 
 tasks.named('test') {

@@ -1,153 +1,159 @@
 package com.chating.service.chat;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.chating.entity.chat.ChatRoom;
 import com.chating.repository.chat.ChatRoomRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatMatchingServiceImpl implements ChatMatchingService {
-	private final ChatRoomRepository chatRoomRepository;
-	private final SimpMessagingTemplate messagingTemplate;
-	private final RedisTemplate<String, Object> redisTemplate;
-	private final RedissonClient redissonClient;
-	private static final String WAITING_QUEUE_KEY = "matching:waiting";
-	private static final String MATCHED_USERS_KEY = "matching:matched:";
 
-	// 방 생성
-	@Override
-	public Long createChatRoom(String user1, String user2) {
-		RLock lock = redissonClient.getLock("chat:matching:lock");
-		
-		if (user1 == null || user1.trim().isEmpty())
-			throw new IllegalArgumentException("발신자 정보 필요");
-		if (user2 == null || user2.trim().isEmpty())
-			throw new IllegalArgumentException("수신자 정보 필요");
-		if (user1.equals(user2))
-			throw new IllegalArgumentException("자신과는 채팅 불가");
+    private final ChatRoomRepository chatRoomRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedissonClient redissonClient;
 
-		Optional<ChatRoom> existingRoom = chatRoomRepository.findRoomByIds(user1, user2);
-		if (existingRoom.isPresent())
-			throw new IllegalArgumentException("두 사용자 간 채팅방 존재");
+    private static final String WAITING_QUEUE_KEY = "matching:waiting";
+    private static final String MATCH_CHANNEL = "match:notifications";
 
-		ChatRoom newRoom = ChatRoom.builder().user1(user1).user2(user2).createdAt(LocalDateTime.now())
-				.chat(new ArrayList<>()).build();
+    // 두 유저 간 채팅방 생성
+    @Override
+    public Long createChatRoom(String user1, String user2) {
+        if (user1.equals(user2)) {
+            throw new IllegalArgumentException("자신과는 채팅 불가");
+        }
+        
+        Optional<ChatRoom> existingRoom = chatRoomRepository.findRoomByIds(user1, user2);
+        if (existingRoom.isPresent()) {
+            throw new IllegalArgumentException("채팅방 이미 존재");
+        }
 
-		return chatRoomRepository.save(newRoom).getRoomId();
-	}
+        ChatRoom room = ChatRoom.builder()
+                .user1(user1)
+                .user2(user2)
+                .createdAt(LocalDateTime.now())
+                .chat(new java.util.ArrayList<>())
+                .build();
+        
+        ChatRoom saved = chatRoomRepository.save(room);
+        return saved.getRoomId();
+    }
 
-	// 랜덤 매칭
-	@Override
-	public void randomMatching(String userId) {
-		RLock lock = redissonClient.getLock("chat:matching:lock");
+    // 랜덤 매칭 요청 또는 취소 처리
+    @Override
+    public void randomMatching(String userId) {
+        RLock lock = redissonClient.getLock("chat:matching:lock");
+        try {
+            if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
+                Boolean alreadyWaiting = redisTemplate.opsForSet().isMember(WAITING_QUEUE_KEY, userId);
+                
+                // 이미 대기 중이면 매칭 취소
+                if (Boolean.TRUE.equals(alreadyWaiting)) {
+                    redisTemplate.opsForSet().remove(WAITING_QUEUE_KEY, userId);
+                    publishMatchNotification(userId, Map.of(
+                        "matched", false,
+                        "message", "매칭 취소됨"
+                    ));
+                    return;
+                }
 
-		System.out.println("=== 매칭 요청 수신 ===");
-		System.out.println("userId: " + userId);
-		try {
-			if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
-				// Redis 대기자 추가
-				redisTemplate.opsForSet().add(WAITING_QUEUE_KEY, userId);
+                // 대기 큐에 추가
+                redisTemplate.opsForSet().add(WAITING_QUEUE_KEY, userId);
+                Long queueSize = redisTemplate.opsForSet().size(WAITING_QUEUE_KEY);
 
-				printWaitingQueue();
+                // 2명 이상이면 매칭 시도
+                if (queueSize != null && queueSize >= 2) {
+                    String user1 = redisTemplate.opsForSet().pop(WAITING_QUEUE_KEY).toString();
+                    String user2 = redisTemplate.opsForSet().pop(WAITING_QUEUE_KEY).toString();
 
-				Long queueSize = redisTemplate.opsForSet().size(WAITING_QUEUE_KEY);
-				System.out.println("대기 큐 현재 인원: " + queueSize);
+                    // 같은 유저면 다시 큐에 넣기
+                    if (user1.equals(user2)) {
+                        redisTemplate.opsForSet().add(WAITING_QUEUE_KEY, user2);
+                        publishMatchNotification(user2, Map.of(
+                            "matched", false,
+                            "message", "매칭 대기 중..."
+                        ));
+                        return;
+                    }
 
-				if (queueSize != null && queueSize >= 2) {
-					Object user1Obj = redisTemplate.opsForSet().pop(WAITING_QUEUE_KEY);
-					Object user2Obj = redisTemplate.opsForSet().pop(WAITING_QUEUE_KEY);
+                    // 채팅방 생성 및 매칭 완료 알림
+                    Long roomId = createChatRoom(user1, user2);
 
-					if (user1Obj != null && user2Obj != null) {
-						String user1 = user1Obj.toString();
-						String user2 = user2Obj.toString();
+                    publishMatchNotification(user1, Map.of(
+                        "matched", true,
+                        "roomId", roomId,
+                        "receiver", user2
+                    ));
+                    
+                    publishMatchNotification(user2, Map.of(
+                        "matched", true,
+                        "roomId", roomId,
+                        "receiver", user1
+                    ));
+                } else {
+                    // 대기 중 상태 알림
+                    publishMatchNotification(userId, Map.of(
+                        "matched", false,
+                        "message", "매칭 대기 중..."
+                    ));
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("매칭 처리 중 인터럽트 발생", e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
 
-						if (user1.equals(user2)) {
-							redisTemplate.opsForSet().add(WAITING_QUEUE_KEY, user1);
-							return;
-						}
+    // 매칭 취소 처리
+    @Override
+    public void cancelMatching(String userId) {
+        RLock lock = redissonClient.getLock("chat:matching:lock");
+        try {
+            if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
+                redisTemplate.opsForSet().remove(WAITING_QUEUE_KEY, userId);
 
-						Optional<ChatRoom> existingRoom = chatRoomRepository.findRoomByIds(user1, user2);
-						if (existingRoom.isPresent()) {
-							redisTemplate.opsForSet().add(WAITING_QUEUE_KEY, user1, user2);
+                publishMatchNotification(userId, Map.of(
+                    "matched", false,
+                    "message", "매칭 취소됨"
+                ));
+                
+                log.info("매칭 취소: userId={}", userId);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("매칭 취소 중 인터럽트 발생", e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
 
-							printWaitingQueue();
-							return;
-						}
-
-						// 매칭 생성
-						int roomId = createChatRoom(user1, user2).intValue();
-						redisTemplate.opsForValue().set(MATCHED_USERS_KEY + user1, roomId);
-						redisTemplate.opsForValue().set(MATCHED_USERS_KEY + user2, roomId);
-
-						Map<String, Object> response1 = Map.of("matched", true, "roomId", roomId, "receiver", user2);
-						Map<String, Object> response2 = Map.of("matched", true, "roomId", roomId, "receiver", user1);
-
-						System.out.println("=== 매칭 성공 ===");
-						messagingTemplate.convertAndSend("/queue/match-" + user1, response1);
-						messagingTemplate.convertAndSend("/queue/match-" + user2, response2);
-
-						printWaitingQueue();
-					}
-				} else {
-					Map<String, Object> waitingResponse = Map.of("matched", false, "message", "매칭 대기 중...");
-					messagingTemplate.convertAndSend("/queue/match-" + userId, waitingResponse);
-				}
-			}
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		} catch (Exception e) {
-			// 그 외 예외 상황 처리
-			System.err.println("매칭 처리 중 오류 발생: " + userId);
-			e.printStackTrace();
-		} finally {
-			// lock 해제
-			lock.unlock();
-		}
-	}
-
-	// 매칭 취소
-	@Override
-	public void cancelMatching(String userId) {
-		RLock lock = redissonClient.getLock("chat:matching:lock");
-		System.out.println("=== 매칭 취소 ===");
-		System.out.println("userId: " + userId);
-		try {
-			if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
-				redisTemplate.opsForSet().remove(WAITING_QUEUE_KEY, userId);
-				redisTemplate.delete(MATCHED_USERS_KEY + userId);
-			}
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		} finally {
-			// lock 해제
-			lock.unlock();
-		}
-		printWaitingQueue();
-	}
-
-	// 현재 대기 큐에 있는 사용자 목록 출력
-	private void printWaitingQueue() {
-		Set<Object> waitingUsers = redisTemplate.opsForSet().members(WAITING_QUEUE_KEY);
-		System.out.println("=== 현재 대기 큐 ===");
-		if (waitingUsers == null || waitingUsers.isEmpty()) {
-			System.out.println("대기 중인 사용자 없음");
-		} else {
-			waitingUsers.forEach(user -> System.out.println("- " + user));
-		}
-		System.out.println("=====================");
-	}
+    // Redis Pub/Sub로 매칭 알림 발행 (모든 서버에 브로드캐스트)
+    private void publishMatchNotification(String userId, Map<String, Object> data) {
+        try {
+            Map<String, Object> payload = Map.of(
+                "userId", userId,
+                "data", data
+            );
+            redisTemplate.convertAndSend(MATCH_CHANNEL, payload);
+        } catch (Exception e) {
+        }
+    }
 }

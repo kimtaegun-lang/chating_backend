@@ -56,7 +56,7 @@ public class MemberController {
 	            .secure(true)
 	            .path("/")
 	            .maxAge(30 * 60)
-	            .sameSite("None")  
+	            .sameSite("None")
 	            .build();
 
 	    // Refresh Token 쿠키
@@ -65,7 +65,7 @@ public class MemberController {
 	            .secure(true)
 	            .path("/")
 	            .maxAge(7 * 24 * 60 * 60)
-	            .sameSite("None")  
+	            .sameSite("None") 
 	            .build();
 
 	    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());

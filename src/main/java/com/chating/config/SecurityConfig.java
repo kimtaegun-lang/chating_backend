@@ -33,13 +33,17 @@ public class SecurityConfig {
   
     @Value("${FRONTEND_URL}")
     private String frontUrl;
+    
+    @Value("${ALB_URL}")
+    private String albUrl;
    
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin(frontUrl); // FRONTEND_URL
-        configuration.addAllowedOrigin("http://localhost:3000/");
-        configuration.addAllowedOrigin("http://localhost:3001/");
+        configuration.addAllowedOriginPattern(frontUrl);
+        configuration.addAllowedOriginPattern(albUrl);
+        configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.addAllowedOrigin("http://localhost:3001");
         configuration.addAllowedMethod("*");      // GET, POST, PUT, DELETE, OPTIONS 모두 허용
         configuration.addAllowedHeader("*");      // 모든 헤더 허용
         configuration.setAllowCredentials(true);  // 쿠키/인증 허용

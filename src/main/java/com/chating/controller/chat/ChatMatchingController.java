@@ -23,6 +23,7 @@ public class ChatMatchingController {
     public void requestMatch(SimpMessageHeaderAccessor headerAccessor) {
         String userId =(String) headerAccessor.getSessionAttributes().get("userId");
         chatMatchingService.randomMatching(userId);
+        
     }
     
     // 매칭 취소

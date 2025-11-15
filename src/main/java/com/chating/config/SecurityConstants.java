@@ -7,6 +7,7 @@ public class SecurityConstants {
         "/member/signIn",
         "/api/refresh",
         "/h2-console/**",
-        "/ws-chat/**"
+        "/ws-chat/**",
+        "/health"
     };
 }

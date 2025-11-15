@@ -4,17 +4,17 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.amqp.core.FanoutExchange;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.chating.common.CustomException;
-import com.chating.dto.admin.MemberListDTO;
 import com.chating.dto.chat.BroadcastResDTO;
 import com.chating.dto.chat.ChatRoomResDTO;
 import com.chating.dto.chat.ConversationDTO;
@@ -30,47 +30,45 @@ import com.chating.repository.chat.ChatRoomRepository;
 import com.chating.repository.member.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class ChatServiceImpl implements ChatService {
+    
     private final ModelMapper modelMapper;
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final SimpMessagingTemplate messagingTemplate;
     private final MemberRepository memberRepository;
-    // 메시지 저장
+    private final RabbitTemplate rabbitTemplate;
+    private final FanoutExchange chatFanoutExchange;
+
     @Override
     public void saveMessage(sendMessageDTO message) {
-        
-        // 채팅방 존재 여부 확인
         ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
-                message.getSender(), 
-                message.getReceiver()
-            )
-            .orElseThrow(() -> new CustomException(
-                HttpStatus.NOT_FOUND,
-                "유효하지 않는 채팅방 입니다."
-            ));
-       
-        // 메시지 저장
+                message.getSender(), message.getReceiver())
+            .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "채팅방 없음"));
+
         Chat chat = Chat.builder()
-            .sender(message.getSender())
-            .receiver(message.getReceiver())
-            .content(message.getContent())
-            .createdAt(LocalDateTime.now())
-            .chatroom(chatRoom)
-            .build();
+                .sender(message.getSender())
+                .receiver(message.getReceiver())
+                .content(message.getContent())
+                .createdAt(LocalDateTime.now())
+                .chatroom(chatRoom)
+                .build();
 
         Chat savedChat = chatRepository.save(chat);
-        BroadcastResDTO response =modelMapper.map(savedChat, BroadcastResDTO.class);
+        BroadcastResDTO response = modelMapper.map(savedChat, BroadcastResDTO.class);
+        response.setChatRoomId(message.getRoomId());
         response.setType("CREATE");
-        
-        messagingTemplate.convertAndSend("/topic/chatroom-" + message.getRoomId(), response);
+
+        // Fanout Exchange로 발행 (모든 서버에 브로드캐스트)
+        // routingKey는 빈 문자열 (Fanout은 라우팅 키 무시)
+        rabbitTemplate.convertAndSend(chatFanoutExchange.getName(), "", response);
     }
 
-    // 채팅 삭제
     @Transactional
     public void deleteChat(DeleteMessageDTO message) {
         Chat chat = chatRepository.findById(message.getChatId())
@@ -78,46 +76,40 @@ public class ChatServiceImpl implements ChatService {
                 HttpStatus.NOT_FOUND,
                 "해당 채팅을 찾을 수 없습니다."
             ));
-        
-        // 채팅방 존재 여부 확인
-        ChatRoom chatRoom = chatRoomRepository.findById(
-                message.getRoomId())
+
+        chatRoomRepository.findById(message.getRoomId())
             .orElseThrow(() -> new CustomException(
                 HttpStatus.NOT_FOUND,
                 "유효하지 않은 채팅방 입니다."
             ));
-        
+
         chatRepository.deleteById(message.getChatId());
-        
-        // 삭제 알림 객체 생성
-        BroadcastResDTO response=BroadcastResDTO.builder()
+
+        BroadcastResDTO response = BroadcastResDTO.builder()
             .chatId(message.getChatId())
+            .chatRoomId(message.getRoomId())
             .type("DELETE")
             .build();
+
+        // Fanout Exchange로 발행 (모든 서버에 브로드캐스트)
+        rabbitTemplate.convertAndSend(chatFanoutExchange.getName(), "", response);
         
-        messagingTemplate.convertAndSend("/topic/chatroom-" + message.getRoomId(), response);
     }
-    
-    
-    
-    // 대화 내역 조회
+
     @Override
     @Transactional(readOnly = true)
     public PageResponseDTO<ConversationResDTO> getConversation(ConversationDTO conversationDTO) {
-        
-    	// 채팅방 존재 여부 확인
         ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
-                conversationDTO.getUser1(), 
+                conversationDTO.getUser1(),
                 conversationDTO.getUser2()
             )
             .orElseThrow(() -> new CustomException(
                 HttpStatus.NOT_FOUND,
                 "회원들간 채팅방을 찾을 수 없습니다."
             ));
-        
-        if(chatRoom.getRoomId()!=conversationDTO.getRoomId())
-        {
-        	throw new CustomException(HttpStatus.NOT_FOUND,"존재하지 않는 채팅방 입니다.");
+
+        if (chatRoom.getRoomId() != conversationDTO.getRoomId()) {
+            throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 채팅방 입니다.");
         }
 
         int size = conversationDTO.getLimit() > 0 ? conversationDTO.getLimit() : 10;
@@ -127,8 +119,8 @@ public class ChatServiceImpl implements ChatService {
 
         Page<ConversationResDTO> dtoPage = chatRepository.getConversationByChatId(
                 conversationDTO.getUser1(),
-                conversationDTO.getUser2(), 
-                chatId, 
+                conversationDTO.getUser2(),
+                chatId,
                 pageable);
 
         PageResponseDTO<ConversationResDTO> response = new PageResponseDTO<>(dtoPage);
@@ -140,10 +132,8 @@ public class ChatServiceImpl implements ChatService {
             response.setCurrentPage(0);
         }
         return response;
-    } 
-    
+    }
 
- // 본인 채팅방 목록 조회
     @Override
     @Transactional(readOnly = true)
     public PageResponseDTO<ChatRoomResDTO> getMyChatRooms(String userId, int pageCount, int size) {
@@ -154,30 +144,23 @@ public class ChatServiceImpl implements ChatService {
         Pageable pageable = PageRequest.of(pageCount, size);
         Page<ChatRoom> chatRoomPage = chatRoomRepository.findMyChatRooms(pageable, userId);
 
-        // Entity -> DTO 변환
         Page<ChatRoomResDTO> dtoPage = chatRoomPage.map(chatroom -> {
             ChatRoomResDTO dto = modelMapper.map(chatroom, ChatRoomResDTO.class);
-            
+
             if (userId.equals(chatroom.getUser1())) {
                 dto.setReceiver(chatroom.getUser2());
             } else {
                 dto.setReceiver(chatroom.getUser1());
             }
-            
+
             return dto;
         });
 
         return new PageResponseDTO<>(dtoPage);
     }
-    
-    // 상대측 상태 확인
+
     public boolean getReceiverStatus(String receiverId) {
         Optional<Member> member = memberRepository.findById(receiverId);
-        
-        if (member.isPresent()) {
-            return true; // 회원이 존재하면 활성
-        }
-        return false; // 회원이 없으면 비활성
+        return member.isPresent();
     }
-    
 }

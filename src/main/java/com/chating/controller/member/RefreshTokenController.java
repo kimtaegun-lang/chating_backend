@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +18,6 @@ import com.chating.entity.member.Role;
 import com.chating.repository.refresh.RefreshTokenRepository;
 import com.chating.util.JwtUtil;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -68,18 +69,22 @@ public class RefreshTokenController {
 
         
  
-        // 새로운 AccessToken 생성
+     // 새로운 AccessToken 생성
         String newAccessToken = jwtUtil.generateAccessToken(jwtUtil.extractUsername(refreshToken), Role.USER);
 
-        Cookie accessCookie = new Cookie("accessToken", newAccessToken);
-        accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge(30 * 60);
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", newAccessToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(30 * 60)
+                .sameSite("None")
+                .build();
 
-        response.addCookie(accessCookie);
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         System.out.println("토큰 재발급 완료 - IP: " + ip);
 
         return ResponseEntity.ok("토큰 재발급 완료");
+
+        
     }
 }

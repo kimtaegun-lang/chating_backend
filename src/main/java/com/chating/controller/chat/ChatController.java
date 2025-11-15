@@ -26,10 +26,17 @@ public class ChatController {
 	private final ChatService chatService;
 
 	// 메시지 전송
-	@MessageMapping("/send")
+	@MessageMapping("/send/message")
 	public ResponseEntity<String> sendMessage(@Valid sendMessageDTO message) {
-	chatService.saveMessage(message);
+		chatService.saveMessage(message);
 		return ResponseEntity.ok("메시지 전송 완료");
+	}
+
+	// 파일 및 이미지 전송
+	@MessageMapping("/send/file")
+	public ResponseEntity<String> sendFile(@Valid sendMessageDTO message) {
+		chatService.saveMessage(message);
+		return ResponseEntity.ok("파일 전송 완료");
 	}
 
 	// 메시지 삭제
@@ -53,20 +60,19 @@ public class ChatController {
 	@PreAuthorize("isAuthenticated()")
 	@GetMapping("/api/chat/chatRooms")
 	public ResponseEntity<Map<String, Object>> getMyChatRooms(@RequestParam("userId") String userId,
-		@RequestParam("size") int size,	@RequestParam("pageCount") int pageCount) {
+			@RequestParam("size") int size, @RequestParam("pageCount") int pageCount) {
 		Map<String, Object> response = new HashMap<>();
 		response.put("message", "채팅 목록 조회 완료");
-		response.put("data", chatService.getMyChatRooms(userId,pageCount,size));
+		response.put("data", chatService.getMyChatRooms(userId, pageCount, size));
 		return ResponseEntity.ok(response);
 	}
-	
+
 	// 상대 측 탈퇴 여부 확인
 	@PreAuthorize("isAuthenticated()")
 	@GetMapping("/api/chat/receiver-status")
-	public ResponseEntity<Boolean> getReceiverStatus(
-	    @RequestParam("receiverId") String receiverId) {
-	    boolean isActive=chatService.getReceiverStatus(receiverId);
-	    
-	    return ResponseEntity.ok(isActive);
+	public ResponseEntity<Boolean> getReceiverStatus(@RequestParam("receiverId") String receiverId) {
+		boolean isActive = chatService.getReceiverStatus(receiverId);
+
+		return ResponseEntity.ok(isActive);
 	}
 }
