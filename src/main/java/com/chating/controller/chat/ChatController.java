@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,11 +33,11 @@ public class ChatController {
 		return ResponseEntity.ok("메시지 전송 완료");
 	}
 
-	// 파일 및 이미지 전송
-	@MessageMapping("/send/file")
-	public ResponseEntity<String> sendFile(@Valid sendMessageDTO message) {
-		chatService.saveMessage(message);
-		return ResponseEntity.ok("파일 전송 완료");
+	// HTTP 엔드포인트로 파일 업로드
+	@PostMapping("api/send/file")
+	public ResponseEntity<String> sendFile(@ModelAttribute sendMessageDTO message) {
+	    chatService.saveMessage(message);  // 내부에서 WebSocket 브로드캐스트
+	    return ResponseEntity.ok("파일 전송 완료");
 	}
 
 	// 메시지 삭제

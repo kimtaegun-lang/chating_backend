@@ -47,7 +47,7 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-chat")
-                .setAllowedOrigins(frontUrl, "http://localhost:3001")
+                .setAllowedOrigins(frontUrl, "http://localhost:3001","http://localhost:3000")
                 .addInterceptors(new CookieHandshakeInterceptor())
                 .withSockJS()
                 .setHeartbeatTime(25000);

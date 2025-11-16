@@ -1,5 +1,6 @@
 package com.chating.service.chat;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.chating.common.CustomException;
 import com.chating.dto.chat.BroadcastResDTO;
@@ -24,10 +26,12 @@ import com.chating.dto.chat.sendMessageDTO;
 import com.chating.dto.common.PageResponseDTO;
 import com.chating.entity.chat.Chat;
 import com.chating.entity.chat.ChatRoom;
+import com.chating.entity.chat.Type;
 import com.chating.entity.member.Member;
 import com.chating.repository.chat.ChatRepository;
 import com.chating.repository.chat.ChatRoomRepository;
 import com.chating.repository.member.MemberRepository;
+import com.chating.util.S3FileUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,28 +48,78 @@ public class ChatServiceImpl implements ChatService {
     private final MemberRepository memberRepository;
     private final RabbitTemplate rabbitTemplate;
     private final FanoutExchange chatFanoutExchange;
-
+    private final S3FileUtil s3FileUtil;
     @Override
     public void saveMessage(sendMessageDTO message) {
-        ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
-                message.getSender(), message.getReceiver())
-            .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "채팅방 없음"));
 
-        Chat chat = Chat.builder()
+        // 1. 채팅방 검증
+        ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
+                message.getSender(),
+                message.getReceiver())
+            .orElseThrow(() -> new CustomException(
+                HttpStatus.NOT_FOUND,
+                "채팅방 없음"
+            ));
+
+        MultipartFile file = message.getFile();
+
+        Chat.ChatBuilder builder = Chat.builder()
                 .sender(message.getSender())
                 .receiver(message.getReceiver())
-                .content(message.getContent())
-                .createdAt(LocalDateTime.now())
                 .chatroom(chatRoom)
-                .build();
+                .createdAt(LocalDateTime.now());
 
-        Chat savedChat = chatRepository.save(chat);
-        BroadcastResDTO response = modelMapper.map(savedChat, BroadcastResDTO.class);
-        response.setChatRoomId(message.getRoomId());
-        response.setType("CREATE");
+        // 2. 파일 업로드 여부에 따라 분기
+        if (file != null && !file.isEmpty()) {
 
-        // Fanout Exchange로 발행 (모든 서버에 브로드캐스트)
-        // routingKey는 빈 문자열 (Fanout은 라우팅 키 무시)
+            String uploadedUrl = null;
+
+            try {
+                uploadedUrl = s3FileUtil.upload(file);
+            } catch (IOException e) {
+                throw new CustomException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "파일 업로드 실패"
+                );
+            }
+
+            builder
+                .type(Type.FILE)
+                .url(uploadedUrl)
+                .fileName(file.getOriginalFilename())
+                .fileSize(file.getSize());
+
+        } else {
+            // 텍스트 메시지
+            builder
+                .type(Type.TEXT)
+                .content(message.getContent());
+        }
+
+     // 3. 엔티티 저장
+        Chat savedChat = chatRepository.save(builder.build());
+
+        // 4. 응답 DTO 변환 - ModelMapper 사용하지 말고 직접 설정!
+        BroadcastResDTO response = BroadcastResDTO.builder()
+            .chatId(savedChat.getChatId())
+            .chatRoomId(message.getRoomId())
+            .sender(savedChat.getSender())
+            .receiver(savedChat.getReceiver())
+            .content(savedChat.getContent())
+            .createdAt(savedChat.getCreatedAt())
+            .build();
+
+        // type에 따라 필드 설정
+        if (savedChat.getType() == Type.FILE) {
+            response.setType("FILE");
+            response.setUrl(savedChat.getUrl());
+            response.setFileName(savedChat.getFileName());
+            response.setFileSize(savedChat.getFileSize());
+        } else {
+            response.setType("TEXT");
+        }
+
+        // 5. Fanout 브로드캐스트
         rabbitTemplate.convertAndSend(chatFanoutExchange.getName(), "", response);
     }
 

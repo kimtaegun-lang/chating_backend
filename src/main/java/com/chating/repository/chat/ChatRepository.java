@@ -13,9 +13,12 @@ import com.chating.entity.chat.Chat;
 
 public interface ChatRepository extends JpaRepository<Chat,Long> {
 	// 두 회원 간의 메시지 내역 조회
-	@Query("SELECT new com.chating.dto.chat.ConversationResDTO(c.sender, c.receiver, c.createdAt, c.content, c.chatId) " +
+	@Query("SELECT new com.chating.dto.chat.ConversationResDTO(" +
+		       "c.chatId, c.sender, c.receiver, c.content, c.createdAt, c.type, " +
+		       "c.url, c.fileName, c.fileSize) " +
 		       "FROM Chat c " +
-		       "WHERE ((c.sender = :user1 AND c.receiver = :user2) OR (c.sender = :user2 AND c.receiver = :user1)) " +
+		       "WHERE ((c.sender = :user1 AND c.receiver = :user2) " +
+		       "OR (c.sender = :user2 AND c.receiver = :user1)) " +
 		       "AND c.chatId < :chatId")
 		Page<ConversationResDTO> getConversationByChatId(
 		    @Param("user1") String user1,
