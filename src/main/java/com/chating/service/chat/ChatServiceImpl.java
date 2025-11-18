@@ -2,6 +2,7 @@ package com.chating.service.chat;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
@@ -49,79 +50,92 @@ public class ChatServiceImpl implements ChatService {
     private final RabbitTemplate rabbitTemplate;
     private final FanoutExchange chatFanoutExchange;
     private final S3FileUtil s3FileUtil;
-    @Override
-    public void saveMessage(sendMessageDTO message) {
+	private static final List<String> IMAGE_EXTENSIONS = List.of(
+	        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"
+	);
+	@Override
+	public void saveMessage(sendMessageDTO message) {
 
-        // 1. 채팅방 검증
-        ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
-                message.getSender(),
-                message.getReceiver())
-            .orElseThrow(() -> new CustomException(
-                HttpStatus.NOT_FOUND,
-                "채팅방 없음"
-            ));
+	    // 1. 채팅방 검증
+	    ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
+	            message.getSender(),
+	            message.getReceiver())
+	        .orElseThrow(() -> new CustomException(
+	            HttpStatus.NOT_FOUND,
+	            "채팅방 없음"
+	        ));
 
-        MultipartFile file = message.getFile();
+	    MultipartFile file = message.getFile();
 
-        Chat.ChatBuilder builder = Chat.builder()
-                .sender(message.getSender())
-                .receiver(message.getReceiver())
-                .chatroom(chatRoom)
-                .createdAt(LocalDateTime.now());
+	    Chat.ChatBuilder builder = Chat.builder()
+	            .sender(message.getSender())
+	            .receiver(message.getReceiver())
+	            .chatroom(chatRoom)
+	            .createdAt(LocalDateTime.now());
 
-        // 2. 파일 업로드 여부에 따라 분기
-        if (file != null && !file.isEmpty()) {
+	    // 2. 파일 처리
+	    if (file != null && !file.isEmpty()) {
 
-            String uploadedUrl = null;
+	        String uploadedUrl;
+	        try {
+	            uploadedUrl = s3FileUtil.upload(file);
+	        } catch (IOException e) {
+	            throw new CustomException(
+	                HttpStatus.INTERNAL_SERVER_ERROR,
+	                "파일 업로드 실패"
+	            );
+	        }
 
-            try {
-                uploadedUrl = s3FileUtil.upload(file);
-            } catch (IOException e) {
-                throw new CustomException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "파일 업로드 실패"
-                );
-            }
+	        String filename = file.getOriginalFilename();
+	        long fileSize = file.getSize();
 
-            builder
-                .type(Type.FILE)
-                .url(uploadedUrl)
-                .fileName(file.getOriginalFilename())
-                .fileSize(file.getSize());
+	        // 이미지인지 판단
+	        Type detectedType = isImageFile(filename) ? Type.IMAGE : Type.FILE;
 
-        } else {
-            // 텍스트 메시지
-            builder
-                .type(Type.TEXT)
-                .content(message.getContent());
-        }
+	        builder
+	            .type(detectedType)
+	            .url(uploadedUrl)
+	            .fileName(filename)
+	            .fileSize(fileSize);
 
-     // 3. 엔티티 저장
-        Chat savedChat = chatRepository.save(builder.build());
+	    } else {
+	        // 텍스트 메시지
+	        builder
+	            .type(Type.TEXT)
+	            .content(message.getContent());
+	    }
 
-        // 4. 응답 DTO 변환 - ModelMapper 사용하지 말고 직접 설정!
-        BroadcastResDTO response = BroadcastResDTO.builder()
-            .chatId(savedChat.getChatId())
-            .chatRoomId(message.getRoomId())
-            .sender(savedChat.getSender())
-            .receiver(savedChat.getReceiver())
-            .content(savedChat.getContent())
-            .createdAt(savedChat.getCreatedAt())
-            .build();
+	    // 3. 엔티티 저장
+	    Chat savedChat = chatRepository.save(builder.build());
 
-        // type에 따라 필드 설정
-        if (savedChat.getType() == Type.FILE) {
-            response.setType("FILE");
-            response.setUrl(savedChat.getUrl());
-            response.setFileName(savedChat.getFileName());
-            response.setFileSize(savedChat.getFileSize());
-        } else {
-            response.setType("TEXT");
-        }
+	    // 4. 응답 DTO 구성
+	    BroadcastResDTO response = BroadcastResDTO.builder()
+	        .chatId(savedChat.getChatId())
+	        .chatRoomId(message.getRoomId())
+	        .sender(savedChat.getSender())
+	        .receiver(savedChat.getReceiver())
+	        .content(savedChat.getContent())
+	        .createdAt(savedChat.getCreatedAt())
+	        .type(savedChat.getType().name()) // "TEXT", "FILE", "IMAGE"
+	        .build();
 
-        // 5. Fanout 브로드캐스트
-        rabbitTemplate.convertAndSend(chatFanoutExchange.getName(), "", response);
+	    if (savedChat.getType() != Type.TEXT) {
+	        response.setUrl(savedChat.getUrl());
+	        response.setFileName(savedChat.getFileName());
+	        response.setFileSize(savedChat.getFileSize());
+	    }
+
+	    // 5. Fanout 브로드캐스트
+	    rabbitTemplate.convertAndSend(chatFanoutExchange.getName(), "", response);
+	}
+    
+    // 이미지 여부 판별
+    private boolean isImageFile(String filename) {
+        if (filename == null) return false;
+        String lower = filename.toLowerCase();
+        return IMAGE_EXTENSIONS.stream().anyMatch(lower::endsWith);
     }
+    
 
     @Transactional
     public void deleteChat(DeleteMessageDTO message) {

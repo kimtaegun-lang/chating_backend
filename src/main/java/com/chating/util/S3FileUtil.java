@@ -1,6 +1,7 @@
 package com.chating.util;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +19,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Component
@@ -71,6 +73,7 @@ public class S3FileUtil {
                 .key(saveFileName)
                 .contentType(contentType != null ? contentType : "application/octet-stream")
                 .contentDisposition("attachment; filename*=UTF-8''" + encodedOriginalName)
+                .contentDisposition("inline; filename*=UTF-8''" + encodedOriginalName)  // attachment → inline
                 .build();
 
         s3.putObject(request, RequestBody.fromBytes(file.getBytes()));
@@ -78,4 +81,29 @@ public class S3FileUtil {
         // 업로드 된 파일의 URL 반환
         return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, saveFileName);
     }
+    
+    	public void delete(String fileUrl) {
+    	    try {
+    	        URI uri = URI.create(fileUrl);   // URL 파싱
+    	        String key = uri.getPath().substring(1);  // "/chat/xxx.png" → "chat/xxx.png"
+
+    	        S3Client s3 = S3Client.builder()
+    	                .region(Region.of(region))
+    	                .credentialsProvider(
+    	                        StaticCredentialsProvider.create(
+    	                                AwsBasicCredentials.create(accessKey, secretKey)))
+    	                .build();
+
+    	        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+    	                .bucket(bucket)
+    	                .key(key)
+    	                .build();
+
+    	        s3.deleteObject(deleteObjectRequest);
+    	        System.out.println("S3 파일 삭제 완료: " + key);
+
+    	    } catch (Exception e) {
+    	        System.out.println("S3 파일 삭제 실패: " + e.getMessage());
+    	    }
+    	}
 }

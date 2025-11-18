@@ -1,6 +1,7 @@
 package com.chating.repository.chat;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,4 +27,8 @@ public interface ChatRepository extends JpaRepository<Chat,Long> {
 		    @Param("chatId") Long chatId,
 		    Pageable pageable
 		);
+	
+	// 업로드 후 30일 지난 파일 불러 오기
+	@Query("SELECT c FROM Chat c WHERE (c.type='FILE' OR c.type='IMAGE') AND c.createdAt < :limit")
+	List<Chat> findOldFiles(@Param("limit") LocalDateTime limit);
 }
