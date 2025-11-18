@@ -44,13 +44,12 @@ public class MemberController {
 	
 	// 로그인 로직
 	@PostMapping("/signIn")
-	public ResponseEntity<String> signIn(
+	public ResponseEntity<Map<String, Object>> signIn(
 	        @RequestBody @Valid SignInDTO userData,
 	        HttpServletResponse response) {
-	    
+
 	    SignInResDTO dto = memberService.signIn(userData);
 
-	    // Access Token 쿠키
 	    ResponseCookie accessCookie = ResponseCookie.from("accessToken", dto.getAccessToken())
 	            .httpOnly(true)
 	            .secure(true)
@@ -59,19 +58,23 @@ public class MemberController {
 	            .sameSite("None")
 	            .build();
 
-	    // Refresh Token 쿠키
 	    ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", dto.getRefreshToken())
 	            .httpOnly(true)
 	            .secure(true)
 	            .path("/")
 	            .maxAge(7 * 24 * 60 * 60)
-	            .sameSite("None") 
+	            .sameSite("None")
 	            .build();
 
 	    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 	    response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-	    return ResponseEntity.ok("로그인이 완료되었습니다.");
+	    // 만료시간 정보 추가
+	    Map<String, Object> responseBody = new HashMap<>();
+	    responseBody.put("message", "로그인이 완료되었습니다.");
+	    responseBody.put("expiresIn", 1800); // 30분 
+
+	    return ResponseEntity.ok(responseBody);
 	}
 
 	
@@ -89,7 +92,7 @@ public class MemberController {
 	            .maxAge(0)
 	            .sameSite("None")
 	            .build();
-
+	    
 	    // Refresh Token 쿠키 만료
 	    ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
 	            .httpOnly(true)

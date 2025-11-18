@@ -23,6 +23,7 @@ public class JwtUtil {
     private String secretKey;
 
     @Value("${jwt.expiration:1800000}") // 30분
+    //@Value("${jwt.expiration:3000}") // 30분
     private long expirationTime;
 
     @Value("${jwt.expiration:604800000}") // 7일
@@ -94,7 +95,7 @@ public class JwtUtil {
         return auth.getName();
     }
 
-    // 현재 로그인 한 아이디 반환 
+    // 현재 로그인 한 권한 반환
     public String getRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -102,7 +103,23 @@ public class JwtUtil {
         	throw new CustomException(HttpStatus.UNAUTHORIZED,"로그인 되지 않은 상태입니다.");
         }
 
-        return auth.getName();
+        return auth.getAuthorities().toString();
+    }
+    
+    // AccessToken 남은 시간(ms) 반환
+    public long getRemainingTime(String token) {
+        try {
+            Date expiration = Jwts.parserBuilder()
+                    .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)))
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getExpiration();
+
+            return expiration.getTime() - System.currentTimeMillis(); // ms 단위
+        } catch (Exception e) {
+            return -1; 
+        }
     }
 
 }
