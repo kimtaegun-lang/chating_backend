@@ -58,7 +58,6 @@ public class ChatMatchingServiceImpl implements ChatMatchingService {
     @Override
     public void randomMatching(String userId,String role) {
     	  if (!"USER".equals(role)) {
-    	        // messagingTemplate 대신 publishMatchNotification 사용
     	        publishMatchNotification(userId, Map.of(
     	            "matched", false,
     	            "error", "일반 회원만 매칭을 이용할 수 있습니다."
@@ -136,7 +135,6 @@ public class ChatMatchingServiceImpl implements ChatMatchingService {
     // 매칭 취소 처리
     @Override
     public void cancelMatching(String userId,String role) {
-    	System.out.println("현재권한은 "+role+"입니다.ㅁㅇㄴㅇㄴㅁㅇㄴㅁㅇㄴ");
     	 if(!"USER".equals(role)) {
     	        throw new CustomException(HttpStatus.BAD_REQUEST, "일반 회원만 매칭을 이용 할 수 있습니다.");
     	    }

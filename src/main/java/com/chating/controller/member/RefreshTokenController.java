@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.chating.common.CustomException;
+import com.chating.entity.member.Member;
 import com.chating.entity.member.RefreshToken;
 import com.chating.entity.member.Role;
+import com.chating.repository.member.MemberRepository;
 import com.chating.repository.refresh.RefreshTokenRepository;
 import com.chating.util.JwtUtil;
 
@@ -28,7 +30,7 @@ public class RefreshTokenController {
 
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
-
+    private final MemberRepository memberRepository;
     @PostMapping("/api/refresh")
     public ResponseEntity<Map<String,Object>> refreshAccessToken(
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
@@ -63,9 +65,13 @@ public class RefreshTokenController {
                     "AccessToken 유효시간이 충분하여 재발급할 수 없습니다.");
             }
         }
- 
+        
+        String userId=jwtUtil.extractUsername(refreshToken);
+        Member member=memberRepository.findById(userId).orElseThrow(()->
+        new CustomException(HttpStatus.NOT_FOUND,"해당 하는 회원이 없습니다."));
+        
      // 새로운 AccessToken 생성
-        String newAccessToken = jwtUtil.generateAccessToken(jwtUtil.extractUsername(refreshToken), Role.USER);
+        String newAccessToken = jwtUtil.generateAccessToken(jwtUtil.extractUsername(refreshToken), member.getRole());
 
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", newAccessToken)
                 .httpOnly(true)

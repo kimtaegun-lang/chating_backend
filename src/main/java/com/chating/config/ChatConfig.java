@@ -71,8 +71,10 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
                             String token = cookie.getValue();
                             try {
                                 String userId = jwtUtil.extractUsername(token);
+                                String role=jwtUtil.extractRole(token);
                                 attributes.put("userId", userId);
                                 attributes.put("token", token);
+                                attributes.put("role",role );
                             } catch (Exception ignored) {}
                             break;
                         }

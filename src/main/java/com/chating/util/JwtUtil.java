@@ -23,8 +23,8 @@ public class JwtUtil {
     @Value("${jwt.secret:your-super-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm}")
     private String secretKey;
 
-    //@Value("${jwt.expiration:1800000}") // 30분
-    @Value("${jwt.expiration:3000}") // 30분
+    @Value("${jwt.expiration:1800000}") // 30분
+    //@Value("${jwt.expiration:3000}") // 30분
     private long expirationTime;
 
     @Value("${jwt.expiration:604800000}") // 7일
@@ -61,7 +61,7 @@ public class JwtUtil {
                 .getSubject();
     }
 
- // 토큰에서 role 추출 
+    // 토큰에서 role 추출 
     public String extractRole(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)))
