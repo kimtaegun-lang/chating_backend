@@ -8,8 +8,11 @@ import java.util.concurrent.TimeUnit;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.chating.common.CustomException;
 import com.chating.entity.chat.ChatRoom;
 import com.chating.repository.chat.ChatRoomRepository;
 
@@ -24,7 +27,7 @@ public class ChatMatchingServiceImpl implements ChatMatchingService {
     private final ChatRoomRepository chatRoomRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedissonClient redissonClient;
-
+    private final SimpMessagingTemplate messagingTemplate;
     private static final String WAITING_QUEUE_KEY = "matching:waiting";
     private static final String MATCH_CHANNEL = "match:notifications";
 
@@ -53,7 +56,17 @@ public class ChatMatchingServiceImpl implements ChatMatchingService {
 
     // 랜덤 매칭 요청 또는 취소 처리
     @Override
-    public void randomMatching(String userId) {
+    public void randomMatching(String userId,String role) {
+    	  if (!"USER".equals(role)) {
+    	        // messagingTemplate 대신 publishMatchNotification 사용
+    	        publishMatchNotification(userId, Map.of(
+    	            "matched", false,
+    	            "error", "일반 회원만 매칭을 이용할 수 있습니다."
+    	        ));
+    	        return;
+    	    }
+
+    	
         RLock lock = redissonClient.getLock("chat:matching:lock");
         try {
             if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
@@ -122,7 +135,12 @@ public class ChatMatchingServiceImpl implements ChatMatchingService {
 
     // 매칭 취소 처리
     @Override
-    public void cancelMatching(String userId) {
+    public void cancelMatching(String userId,String role) {
+    	System.out.println("현재권한은 "+role+"입니다.ㅁㅇㄴㅇㄴㅁㅇㄴㅁㅇㄴ");
+    	 if(!"USER".equals(role)) {
+    	        throw new CustomException(HttpStatus.BAD_REQUEST, "일반 회원만 매칭을 이용 할 수 있습니다.");
+    	    }
+    	
         RLock lock = redissonClient.getLock("chat:matching:lock");
         try {
             if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {

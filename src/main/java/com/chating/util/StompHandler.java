@@ -36,17 +36,19 @@ public class StompHandler implements ChannelInterceptor {
     private void handleConnect(StompHeaderAccessor accessor) {
         String userId = (String) accessor.getSessionAttributes().get("userId");
         String token = (String) accessor.getSessionAttributes().get("token");
-        
+
         if (userId == null || token == null || !jwtUtil.isTokenValid(token)) {
             throw new IllegalStateException("유효하지 않은 WebSocket 토큰입니다.");
         }
+
+        // 토큰에서 role 추출해서 세션에 저장
+        String role = jwtUtil.extractRole(token);
+        accessor.getSessionAttributes().put("role", role);
         
-        // Principal 설정 (Spring Security 용)
         accessor.setUser(() -> userId);
-        
-        // Redis에 userId → sessionId 매핑 저장
         sessionManager.register(userId, accessor.getSessionId());
         
+        log.info("WebSocket 연결: userId={}, role={}", userId, role);
     }
 
     // WebSocket 연결 해제 시 세션 정리

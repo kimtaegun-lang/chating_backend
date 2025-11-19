@@ -19,10 +19,12 @@ public class ChatMatchingController {
     private final ChatMatchingService chatMatchingService;
     
     // 랜덤 매칭
+    @PreAuthorize("isAuthenticated()")
     @MessageMapping("/random/match")
     public void requestMatch(SimpMessageHeaderAccessor headerAccessor) {
         String userId =(String) headerAccessor.getSessionAttributes().get("userId");
-        chatMatchingService.randomMatching(userId);
+        String role = (String) headerAccessor.getSessionAttributes().get("role");
+        chatMatchingService.randomMatching(userId,role);
         
     }
     
@@ -31,7 +33,8 @@ public class ChatMatchingController {
     @PostMapping("/api/random/cancel")
     public ResponseEntity<String> cancelMatch() {
     	String userId =jwtUtil.getLoginId();
-        chatMatchingService.cancelMatching(userId);
+    	String role=jwtUtil.getRole();
+        chatMatchingService.cancelMatching(userId,role);
         return ResponseEntity.ok("매칭 취소 완료");
     }
 }

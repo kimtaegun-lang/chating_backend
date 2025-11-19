@@ -6,6 +6,7 @@ import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -22,8 +23,8 @@ public class JwtUtil {
     @Value("${jwt.secret:your-super-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm}")
     private String secretKey;
 
-    @Value("${jwt.expiration:1800000}") // 30분
-    //@Value("${jwt.expiration:3000}") // 30분
+    //@Value("${jwt.expiration:1800000}") // 30분
+    @Value("${jwt.expiration:3000}") // 30분
     private long expirationTime;
 
     @Value("${jwt.expiration:604800000}") // 7일
@@ -100,10 +101,15 @@ public class JwtUtil {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-        	throw new CustomException(HttpStatus.UNAUTHORIZED,"로그인 되지 않은 상태입니다.");
+            throw new CustomException(HttpStatus.UNAUTHORIZED, "로그인 되지 않은 상태입니다.");
         }
 
-        return auth.getAuthorities().toString();
+        // ROLE_ 제거해서 깔끔하게 반환
+        return auth.getAuthorities().stream()
+                .findFirst()
+                .map(GrantedAuthority::getAuthority)
+                .map(role -> role.replace("ROLE_", ""))
+                .orElse("USER");
     }
     
     // AccessToken 남은 시간(ms) 반환
