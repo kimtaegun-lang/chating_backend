@@ -1,4 +1,4 @@
-package com.chating.util;
+package com.chating.util.listener;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -16,10 +16,6 @@ public class ChatMessageListener {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    /**
-     * 서버별 큐를 구독하는 단일 리스너
-     * 모든 채팅방 메시지를 처리
-     */
     @RabbitListener(
         queues = "#{serverChatQueue.name}",
         messageConverter = "jackson2JsonMessageConverter"

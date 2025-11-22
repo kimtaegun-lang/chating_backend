@@ -7,6 +7,7 @@ import com.chating.dto.chat.ConversationResDTO;
 import com.chating.dto.chat.DeleteMessageDTO;
 import com.chating.dto.chat.sendMessageDTO;
 import com.chating.dto.common.PageResponseDTO;
+import com.chating.entity.chat.ChatRoom;
 
 public interface ChatService {
 	void saveMessage(sendMessageDTO message); // 메시지 저장

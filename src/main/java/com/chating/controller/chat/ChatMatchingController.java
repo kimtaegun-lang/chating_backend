@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.chating.service.chat.ChatMatchingService;
-import com.chating.util.JwtUtil;
+import com.chating.util.jwt.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 

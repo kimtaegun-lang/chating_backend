@@ -22,9 +22,8 @@ import com.chating.dto.member.SignInResDTO;
 import com.chating.dto.member.SignUpDTO;
 import com.chating.dto.member.UpdateMemberDTO;
 import com.chating.service.member.MemberService;
-import com.chating.util.JwtUtil;
+import com.chating.util.jwt.JwtUtil;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;

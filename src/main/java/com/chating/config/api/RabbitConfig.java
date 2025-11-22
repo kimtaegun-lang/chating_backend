@@ -1,4 +1,4 @@
-package com.chating.config;
+package com.chating.config.api;
 
 import java.util.UUID;
 

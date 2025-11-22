@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.chating.dto.chat.ConversationDTO;
 import com.chating.dto.chat.DeleteMessageDTO;
 import com.chating.dto.chat.sendMessageDTO;
+import com.chating.entity.chat.ChatRoom;
 import com.chating.service.chat.ChatService;
 
 import jakarta.validation.Valid;

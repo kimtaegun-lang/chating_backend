@@ -1,4 +1,4 @@
-package com.chating.config;
+package com.chating.config.common;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

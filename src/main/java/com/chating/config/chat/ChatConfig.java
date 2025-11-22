@@ -1,4 +1,4 @@
-package com.chating.config;
+package com.chating.config.chat;
 
 import java.util.Map;
 
@@ -15,8 +15,8 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import com.chating.util.JwtUtil;
-import com.chating.util.StompHandler;
+import com.chating.util.chat.StompHandler;
+import com.chating.util.jwt.JwtUtil;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

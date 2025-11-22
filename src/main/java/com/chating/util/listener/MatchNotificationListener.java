@@ -1,4 +1,4 @@
-package com.chating.util;
+package com.chating.util.listener;
 
 import java.util.Map;
 
@@ -9,6 +9,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+import com.chating.util.chat.UserSessionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;

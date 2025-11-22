@@ -1,4 +1,4 @@
-package com.chating.config;
+package com.chating.config.security;
 
 public class SecurityConstants {
 	// 필터 및 security config에서 허용할 경로 배열

@@ -19,6 +19,6 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 	 // 본인이 포함된 채팅방 조회
 	@Query("SELECT c FROM ChatRoom c WHERE c.user1 = :userId OR c.user2 = :userId ORDER BY c.createdAt DESC")
 	Page<ChatRoom> findMyChatRooms(Pageable pageable,@Param("userId") String userId);
-
+	
 
 }

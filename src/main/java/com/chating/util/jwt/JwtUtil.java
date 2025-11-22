@@ -1,4 +1,4 @@
-package com.chating.util;
+package com.chating.util.jwt;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;

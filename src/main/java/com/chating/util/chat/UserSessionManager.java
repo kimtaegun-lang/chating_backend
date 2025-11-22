@@ -1,4 +1,4 @@
-package com.chating.util;
+package com.chating.util.chat;
 
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;

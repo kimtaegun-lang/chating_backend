@@ -32,7 +32,7 @@ import com.chating.entity.member.Member;
 import com.chating.repository.chat.ChatRepository;
 import com.chating.repository.chat.ChatRoomRepository;
 import com.chating.repository.member.MemberRepository;
-import com.chating.util.S3FileUtil;
+import com.chating.util.file.S3FileUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

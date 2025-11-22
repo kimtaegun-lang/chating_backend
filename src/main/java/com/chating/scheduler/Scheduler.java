@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.chating.entity.chat.Chat;
 import com.chating.repository.chat.ChatRepository;
-import com.chating.util.S3FileUtil;
+import com.chating.util.file.S3FileUtil;
 
 import lombok.RequiredArgsConstructor;
 

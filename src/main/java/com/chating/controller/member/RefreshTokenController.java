@@ -15,10 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.chating.common.CustomException;
 import com.chating.entity.member.Member;
 import com.chating.entity.member.RefreshToken;
-import com.chating.entity.member.Role;
 import com.chating.repository.member.MemberRepository;
 import com.chating.repository.refresh.RefreshTokenRepository;
-import com.chating.util.JwtUtil;
+import com.chating.util.jwt.JwtUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

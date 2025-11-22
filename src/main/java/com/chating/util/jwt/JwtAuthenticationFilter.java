@@ -1,4 +1,4 @@
-package com.chating.util;
+package com.chating.util.jwt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.chating.config.SecurityConstants;
+import com.chating.config.security.SecurityConstants;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

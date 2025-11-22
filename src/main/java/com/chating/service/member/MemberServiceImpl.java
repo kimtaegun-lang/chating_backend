@@ -26,7 +26,7 @@ import com.chating.entity.member.Role;
 import com.chating.entity.member.Status;
 import com.chating.repository.member.MemberRepository;
 import com.chating.repository.refresh.RefreshTokenRepository;
-import com.chating.util.JwtUtil;
+import com.chating.util.jwt.JwtUtil;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

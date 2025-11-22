@@ -1,4 +1,4 @@
-package com.chating.config;
+package com.chating.config.api;
 import io.lettuce.core.RedisURI;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -1,4 +1,4 @@
-package com.chating.util;
+package com.chating.util.file;
 
 import java.io.IOException;
 import java.net.URI;
@@ -85,7 +85,7 @@ public class S3FileUtil {
     	public void delete(String fileUrl) {
     	    try {
     	        URI uri = URI.create(fileUrl);   // URL 파싱
-    	        String key = uri.getPath().substring(1);  // "/chat/xxx.png" → "chat/xxx.png"
+    	        String key = uri.getPath().substring(1); 
 
     	        S3Client s3 = S3Client.builder()
     	                .region(Region.of(region))
