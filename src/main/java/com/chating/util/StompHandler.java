@@ -32,6 +32,7 @@ public class StompHandler implements ChannelInterceptor {
     }
 
     // WebSocket 연결 시 JWT 검증 및 세션 등록
+    
     private void handleConnect(StompHeaderAccessor accessor) {
         String userId = (String) accessor.getSessionAttributes().get("userId");
         String token = (String) accessor.getSessionAttributes().get("token");
@@ -46,7 +47,8 @@ public class StompHandler implements ChannelInterceptor {
         // Redis에 userId → sessionId 매핑 저장
         sessionManager.register(userId, accessor.getSessionId());
         
-    }
+    } 
+    
 
     // WebSocket 연결 해제 시 세션 정리
     private void handleDisconnect(StompHeaderAccessor accessor) {

@@ -76,4 +76,5 @@ public class ChatController {
 
 		return ResponseEntity.ok(isActive);
 	}
+	
 }

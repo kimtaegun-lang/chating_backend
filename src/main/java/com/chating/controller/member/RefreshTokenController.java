@@ -38,7 +38,7 @@ public class RefreshTokenController {
             HttpServletRequest request,
             HttpServletResponse response) {
         
-        
+        System.out.println("토큰을 재발급 합니다.");
         // RefreshToken 검증
         if (refreshToken == null || !jwtUtil.isTokenValid(refreshToken)) {
             throw new CustomException(HttpStatus.FORBIDDEN, "세션이 만료되었습니다. 다시 로그인 해주세요.");
@@ -61,8 +61,8 @@ public class RefreshTokenController {
             long remaining = jwtUtil.getRemainingTime(accessToken);
 
             if (remaining > 5 * 60 * 1000) {
-                throw new CustomException(HttpStatus.BAD_REQUEST,
-                    "AccessToken 유효시간이 충분하여 재발급할 수 없습니다.");
+            	throw new CustomException(HttpStatus.CONFLICT, 
+            		    "유효한 토큰이 이미 존재합니다.");
             }
         }
         
