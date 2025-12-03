@@ -25,18 +25,14 @@ public class ChatMessageListener {
             Long roomId = message.getChatRoomId();
             
             if (roomId == null) {
-                log.warn("⚠️ roomId가 없는 메시지: {}", message);
                 return;
             }
             
             // 해당 채팅방을 구독 중인 모든 클라이언트에게 STOMP 브로드캐스트
             messagingTemplate.convertAndSend("/topic/chatroom-" + roomId, message);
-            
-            log.info("✅ 채팅 메시지 브로드캐스트: roomId={}, type={}, chatId={}", 
-                roomId, message.getType(), message.getChatId());
                 
         } catch (Exception e) {
-            log.error("❌ 채팅 메시지 처리 실패", e);
+            log.error("채팅 메시지 처리 실패", e);
         }
     }
 }

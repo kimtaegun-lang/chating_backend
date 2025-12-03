@@ -16,7 +16,7 @@ public interface ChatRepository extends JpaRepository<Chat,Long> {
 	// 두 회원 간의 메시지 내역 조회
 	@Query("SELECT new com.chating.dto.chat.ConversationResDTO(" +
 		       "c.chatId, c.sender, c.receiver, c.content, c.createdAt, c.type, " +
-		       "c.url, c.fileName, c.fileSize) " +
+		       "c.url, c.fileName, c.fileSize,c.isRead) " +
 		       "FROM Chat c " +
 		       "WHERE ((c.sender = :user1 AND c.receiver = :user2) " +
 		       "OR (c.sender = :user2 AND c.receiver = :user1)) " +

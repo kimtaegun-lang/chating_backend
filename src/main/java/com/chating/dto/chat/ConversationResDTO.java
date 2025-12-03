@@ -21,4 +21,5 @@ public class ConversationResDTO {
     private String url;
     private String fileName;
     private Long fileSize;
+    private Boolean isRead;
 }

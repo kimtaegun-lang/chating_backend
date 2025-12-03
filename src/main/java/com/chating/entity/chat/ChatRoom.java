@@ -32,7 +32,7 @@ public class ChatRoom {
 	private String user1; // 회원1
 	
 	@Column(nullable=false)
-    private String user2; // 회원 2
+    private String user2; // 회원2
 	
 	@Column(nullable=false)
 	private LocalDateTime createdAt; // 방 개설 시간

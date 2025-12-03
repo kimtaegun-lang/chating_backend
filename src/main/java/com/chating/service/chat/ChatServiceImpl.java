@@ -8,6 +8,8 @@ import java.util.Optional;
 import org.modelmapper.ModelMapper;
 import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,12 +36,10 @@ import com.chating.repository.chat.ChatRoomRepository;
 import com.chating.repository.member.MemberRepository;
 import com.chating.util.file.S3FileUtil;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class ChatServiceImpl implements ChatService {
     
@@ -49,6 +49,7 @@ public class ChatServiceImpl implements ChatService {
     private final MemberRepository memberRepository;
     private final RabbitTemplate rabbitTemplate;
     private final FanoutExchange chatFanoutExchange;
+    private final FanoutExchange notificationFanoutExchange;
     private final S3FileUtil s3FileUtil;
 	private static final List<String> IMAGE_EXTENSIONS = List.of(
 	        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"
@@ -127,6 +128,8 @@ public class ChatServiceImpl implements ChatService {
 
 	    // 5. Fanout 브로드캐스트
 	    rabbitTemplate.convertAndSend(chatFanoutExchange.getName(), "", response);
+	    rabbitTemplate.convertAndSend(notificationFanoutExchange.getName(), "", response);
+
 	}
     
     // 이미지 여부 판별
@@ -192,7 +195,7 @@ public class ChatServiceImpl implements ChatService {
                 pageable);
 
         PageResponseDTO<ConversationResDTO> response = new PageResponseDTO<>(dtoPage);
-
+        
         if (!dtoPage.getContent().isEmpty()) {
             int lastIndex = dtoPage.getContent().size() - 1;
             response.setCurrentPage(dtoPage.getContent().get(lastIndex).getChatId().intValue());
@@ -231,4 +234,25 @@ public class ChatServiceImpl implements ChatService {
         Optional<Member> member = memberRepository.findById(receiverId);
         return member.isPresent();
     }
+    @Autowired
+    public ChatServiceImpl(
+            ModelMapper modelMapper,
+            ChatRepository chatRepository,
+            ChatRoomRepository chatRoomRepository,
+            MemberRepository memberRepository,
+            RabbitTemplate rabbitTemplate,
+            @Qualifier("chatFanoutExchange") FanoutExchange chatFanoutExchange,
+            @Qualifier("notificationFanoutExchange") FanoutExchange notificationFanoutExchange,
+            S3FileUtil s3FileUtil
+    ) {
+        this.modelMapper = modelMapper;
+        this.chatRepository = chatRepository;
+        this.chatRoomRepository = chatRoomRepository;
+        this.memberRepository = memberRepository;
+        this.rabbitTemplate = rabbitTemplate;
+        this.chatFanoutExchange = chatFanoutExchange;
+        this.notificationFanoutExchange = notificationFanoutExchange;
+        this.s3FileUtil = s3FileUtil;
+    }
+    
 }

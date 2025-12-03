@@ -23,15 +23,20 @@ public class StompHandler implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
-        
+
         switch (accessor.getCommand()) {
             case CONNECT -> handleConnect(accessor);
             case DISCONNECT -> handleDisconnect(accessor);
             case SEND -> validateSend(accessor);
+            case SUBSCRIBE -> {
+                String sid = accessor.getSessionId();
+                String dest = accessor.getDestination();
+            }
         }
         
         return message;
     }
+
 
     // WebSocket 연결 시 JWT 검증 및 세션 등록
     

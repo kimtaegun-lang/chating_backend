@@ -26,7 +26,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class Chat implements Serializable{
-	//private static final long serialVersionUID = 1L;
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long chatId; // 채팅 번호
@@ -59,4 +58,11 @@ public class Chat implements Serializable{
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="room_id",nullable=false)
 	private ChatRoom chatroom; // 채팅방 번호
+	
+	private boolean isRead; // 읽음 여부
+	
+	// 활성화 / 삭제 여부 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable=false)
+	private State state;
 }

@@ -11,6 +11,7 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,8 +25,8 @@ public class RabbitConfig {
     @Value("${spring.rabbitmq.password}") private String password;
     @Value("${spring.rabbitmq.virtual-host}") private String vhost;
 
-    public static final String CHAT_FANOUT_EXCHANGE = "chat.fanout";
-
+    public static final String CHAT_FANOUT_EXCHANGE = "chat.fanout"; // 채팅 메시지용
+    public static final String NOTIFICATION_FANOUT_EXCHANGE = "notification.fanout"; // 알림용
     @Bean
     public CachingConnectionFactory connectionFactory() {
         CachingConnectionFactory factory = new CachingConnectionFactory(host, port);
@@ -49,12 +50,6 @@ public class RabbitConfig {
         return new Queue(queueName, false, true, true);
     }
 
-    // Fanout Exchange와 서버 큐 바인딩
-    @Bean
-    public Binding bindingServerChatQueue(Queue serverChatQueue, FanoutExchange chatFanoutExchange) {
-        return BindingBuilder.bind(serverChatQueue).to(chatFanoutExchange);
-    }
-
     @Bean
     public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
         return new RabbitAdmin(connectionFactory);
@@ -66,7 +61,32 @@ public class RabbitConfig {
         template.setMessageConverter(jackson2JsonMessageConverter());
         return template;
     }
+    
+    @Bean
+    public FanoutExchange notificationFanoutExchange() {
+        return new FanoutExchange(NOTIFICATION_FANOUT_EXCHANGE, true, false);
+    }
+    
+    @Bean
+    public Binding bindingServerChatQueue(
+            @Qualifier("serverChatQueue") Queue serverChatQueue,
+            @Qualifier("chatFanoutExchange") FanoutExchange chatFanoutExchange
+    ) {
+        return BindingBuilder.bind(serverChatQueue).to(chatFanoutExchange);
+    }
 
+    @Bean
+    public Binding bindingNotificationQueue(
+            @Qualifier("notificationQueue") Queue notificationQueue,
+            @Qualifier("notificationFanoutExchange") FanoutExchange notificationFanoutExchange
+    ) {
+        return BindingBuilder.bind(notificationQueue).to(notificationFanoutExchange);
+    }
+
+    @Bean
+    public Queue notificationQueue() {
+        return new Queue("notify.server." + UUID.randomUUID(), false, true, true);
+    }
     @Bean
     public Jackson2JsonMessageConverter jackson2JsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
