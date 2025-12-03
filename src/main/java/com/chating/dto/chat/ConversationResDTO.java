@@ -2,6 +2,7 @@ package com.chating.dto.chat;
 
 import java.time.LocalDateTime;
 
+import com.chating.entity.chat.State;
 import com.chating.entity.chat.Type;
 
 import lombok.AllArgsConstructor;
@@ -22,4 +23,5 @@ public class ConversationResDTO {
     private String fileName;
     private Long fileSize;
     private Boolean isRead;
+    private State state;
 }

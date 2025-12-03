@@ -28,7 +28,9 @@ import com.chating.dto.chat.DeleteMessageDTO;
 import com.chating.dto.chat.sendMessageDTO;
 import com.chating.dto.common.PageResponseDTO;
 import com.chating.entity.chat.Chat;
+import com.chating.entity.chat.ChatFile;
 import com.chating.entity.chat.ChatRoom;
+import com.chating.entity.chat.State;
 import com.chating.entity.chat.Type;
 import com.chating.entity.member.Member;
 import com.chating.repository.chat.ChatRepository;
@@ -67,12 +69,18 @@ public class ChatServiceImpl implements ChatService {
 	        ));
 
 	    MultipartFile file = message.getFile();
-
+/*
 	    Chat.ChatBuilder builder = Chat.builder()
 	            .sender(message.getSender())
 	            .receiver(message.getReceiver())
 	            .chatroom(chatRoom)
-	            .createdAt(LocalDateTime.now());
+	            .createdAt(LocalDateTime.now()); */
+	    
+	    Chat chat=Chat.builder().sender(message.getSender())
+	            .receiver(message.getReceiver())
+	            .chatroom(chatRoom)
+	            .createdAt(LocalDateTime.now())
+	            .state(State.ACTIVE).build();
 
 	    // 2. 파일 처리
 	    if (file != null && !file.isEmpty()) {
@@ -93,21 +101,20 @@ public class ChatServiceImpl implements ChatService {
 	        // 이미지인지 판단
 	        Type detectedType = isImageFile(filename) ? Type.IMAGE : Type.FILE;
 
-	        builder
-	            .type(detectedType)
-	            .url(uploadedUrl)
-	            .fileName(filename)
-	            .fileSize(fileSize);
-
+	       ChatFile chatFile=ChatFile.builder().url(uploadedUrl).fileName(filename).fileSize(fileSize).build();
+	        
+	       chat.setType(detectedType);
+	       chat.setChatFile(chatFile);
+	       chatFile.setChat(chat);
+	       
 	    } else {
 	        // 텍스트 메시지
-	        builder
-	            .type(Type.TEXT)
-	            .content(message.getContent());
+	    	chat.setType(Type.TEXT);
+	    	chat.setContent(message.getContent());
 	    }
-
+	    
 	    // 3. 엔티티 저장
-	    Chat savedChat = chatRepository.save(builder.build());
+	    Chat savedChat = chatRepository.save(chat);
 
 	    // 4. 응답 DTO 구성
 	    BroadcastResDTO response = BroadcastResDTO.builder()
@@ -121,9 +128,9 @@ public class ChatServiceImpl implements ChatService {
 	        .build();
 
 	    if (savedChat.getType() != Type.TEXT) {
-	        response.setUrl(savedChat.getUrl());
-	        response.setFileName(savedChat.getFileName());
-	        response.setFileSize(savedChat.getFileSize());
+	        response.setUrl(savedChat.getChatFile().getUrl());
+	        response.setFileName(savedChat.getChatFile().getFileName());
+	        response.setFileSize(savedChat.getChatFile().getFileSize());
 	    }
 
 	    // 5. Fanout 브로드캐스트
@@ -154,7 +161,7 @@ public class ChatServiceImpl implements ChatService {
                 "유효하지 않은 채팅방 입니다."
             ));
 
-        chatRepository.deleteById(message.getChatId());
+        chatRepository.deleteChat(message.getChatId(),State.DELETED);
 
         BroadcastResDTO response = BroadcastResDTO.builder()
             .chatId(message.getChatId())
@@ -202,6 +209,7 @@ public class ChatServiceImpl implements ChatService {
         } else {
             response.setCurrentPage(0);
         }
+        
         return response;
     }
 

@@ -3,6 +3,7 @@ package com.chating.entity.chat;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,14 +48,8 @@ public class Chat implements Serializable{
 	@Column(nullable=true)
 	private String content; // 텍스트
 	
-	@Column(nullable=true)
-	private String url; // 이미지 및 파일 url
-	
-    @Column(nullable=true)
-    private String fileName; // 파일 원본 이름
-    
-    @Column(nullable=true)
-    private Long fileSize; // 파일 사이즈
+	@OneToOne(mappedBy="chat" ,cascade=CascadeType.ALL)
+	private ChatFile chatFile; // 파일 정보
     
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="room_id",nullable=false)
