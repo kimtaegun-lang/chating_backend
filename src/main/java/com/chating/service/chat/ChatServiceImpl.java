@@ -33,6 +33,7 @@ import com.chating.entity.chat.ChatRoom;
 import com.chating.entity.chat.State;
 import com.chating.entity.chat.Type;
 import com.chating.entity.member.Member;
+import com.chating.entity.member.Status;
 import com.chating.repository.chat.ChatRepository;
 import com.chating.repository.chat.ChatRoomRepository;
 import com.chating.repository.member.MemberRepository;
@@ -199,6 +200,7 @@ public class ChatServiceImpl implements ChatService {
                 conversationDTO.getUser1(),
                 conversationDTO.getUser2(),
                 chatId,
+                State.ACTIVE,
                 pageable);
 
         PageResponseDTO<ConversationResDTO> response = new PageResponseDTO<>(dtoPage);

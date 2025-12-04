@@ -1,5 +1,5 @@
 package com.chating.config.api;
-import io.lettuce.core.RedisURI;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +12,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.lettuce.core.RedisURI;
 @Configuration
 public class RedisConfig {
     @Value("${spring.data.redis.url}")
@@ -66,4 +69,6 @@ public class RedisConfig {
         mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return mapper;
     }
+    
+
 }

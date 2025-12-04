@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import com.chating.dto.chat.ConversationResDTO;
 import com.chating.entity.chat.Chat;
 import com.chating.entity.chat.State;
+import com.chating.entity.member.Status;
 
 public interface ChatRepository extends JpaRepository<Chat,Long> {
 	// 두 회원 간의 메시지 내역 조회
@@ -36,11 +37,13 @@ public interface ChatRepository extends JpaRepository<Chat,Long> {
 			    ((c.sender = :user1 AND c.receiver = :user2)
 			    OR (c.sender = :user2 AND c.receiver = :user1))
 			    AND c.chatId < :chatId
+				AND state=:state
 			""")
 			Page<ConversationResDTO> getConversationByChatId(
 			        @Param("user1") String user1,
 			        @Param("user2") String user2,
 			        @Param("chatId") Long chatId,
+			        @Param("state") State state,
 			        Pageable pageable);
 
 	
