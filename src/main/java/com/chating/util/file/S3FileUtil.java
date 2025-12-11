@@ -73,7 +73,7 @@ public class S3FileUtil {
                 .key(saveFileName)
                 .contentType(contentType != null ? contentType : "application/octet-stream")
                 .contentDisposition("attachment; filename*=UTF-8''" + encodedOriginalName)
-                .contentDisposition("inline; filename*=UTF-8''" + encodedOriginalName)  // attachment → inline
+                .contentDisposition("inline; filename*=UTF-8''" + encodedOriginalName) 
                 .build();
 
         s3.putObject(request, RequestBody.fromBytes(file.getBytes()));

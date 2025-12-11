@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,10 +58,12 @@ public class ChatServiceImpl implements ChatService {
 	private static final List<String> IMAGE_EXTENSIONS = List.of(
 	        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"
 	);
+	 private final RedisTemplate<String, Object> redisTemplate;
+	 private String	BATCH_KEY;
 	@Override
 	public void saveMessage(sendMessageDTO message) {
-
-	    // 1. 채팅방 검증
+		
+	    // 채팅방 검증
 	    ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
 	            message.getSender(),
 	            message.getReceiver())
@@ -70,12 +73,6 @@ public class ChatServiceImpl implements ChatService {
 	        ));
 
 	    MultipartFile file = message.getFile();
-/*
-	    Chat.ChatBuilder builder = Chat.builder()
-	            .sender(message.getSender())
-	            .receiver(message.getReceiver())
-	            .chatroom(chatRoom)
-	            .createdAt(LocalDateTime.now()); */
 	    
 	    Chat chat=Chat.builder().sender(message.getSender())
 	            .receiver(message.getReceiver())
@@ -83,7 +80,7 @@ public class ChatServiceImpl implements ChatService {
 	            .createdAt(LocalDateTime.now())
 	            .state(State.ACTIVE).build();
 
-	    // 2. 파일 처리
+	    // 파일 처리
 	    if (file != null && !file.isEmpty()) {
 
 	        String uploadedUrl;
@@ -114,27 +111,29 @@ public class ChatServiceImpl implements ChatService {
 	    	chat.setContent(message.getContent());
 	    }
 	    
-	    // 3. 엔티티 저장
+	    // 엔티티 저장
 	    Chat savedChat = chatRepository.save(chat);
-
-	    // 4. 응답 DTO 구성
+	  
+	    // 응답 DTO 구성
 	    BroadcastResDTO response = BroadcastResDTO.builder()
-	        .chatId(savedChat.getChatId())
+	        .chatId(chat.getChatId())
 	        .chatRoomId(message.getRoomId())
-	        .sender(savedChat.getSender())
-	        .receiver(savedChat.getReceiver())
-	        .content(savedChat.getContent())
-	        .createdAt(savedChat.getCreatedAt())
-	        .type(savedChat.getType().name()) // "TEXT", "FILE", "IMAGE"
+	        .sender(chat.getSender())
+	        .receiver(chat.getReceiver())
+	        .content(chat.getContent())
+	        .createdAt(chat.getCreatedAt())
+	        .type(chat.getType().name()) // "TEXT", "FILE", "IMAGE"
+	        .isRead(false)
+	        .state(State.ACTIVE)
 	        .build();
-
-	    if (savedChat.getType() != Type.TEXT) {
-	        response.setUrl(savedChat.getChatFile().getUrl());
-	        response.setFileName(savedChat.getChatFile().getFileName());
-	        response.setFileSize(savedChat.getChatFile().getFileSize());
+	    
+	    if (chat.getType() != Type.TEXT) {
+	        response.setUrl(chat.getChatFile().getUrl());
+	        response.setFileName(chat.getChatFile().getFileName());
+	        response.setFileSize(chat.getChatFile().getFileSize());
 	    }
 
-	    // 5. Fanout 브로드캐스트
+	    // Fanout 브로드캐스트
 	    rabbitTemplate.convertAndSend(chatFanoutExchange.getName(), "", response);
 	    rabbitTemplate.convertAndSend(notificationFanoutExchange.getName(), "", response);
 
@@ -174,7 +173,7 @@ public class ChatServiceImpl implements ChatService {
         rabbitTemplate.convertAndSend(chatFanoutExchange.getName(), "", response);
         
     }
-
+/*
     @Override
     @Transactional(readOnly = true)
     public PageResponseDTO<ConversationResDTO> getConversation(ConversationDTO conversationDTO) {
@@ -213,8 +212,40 @@ public class ChatServiceImpl implements ChatService {
         }
         
         return response;
-    }
+    } */
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConversationResDTO> getConversation(ConversationDTO conversationDTO) {
+    	System.out.println(conversationDTO.getCreatedAt()+"------------------------------------------------------");
+        ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
+                conversationDTO.getUser1(),
+                conversationDTO.getUser2()
+            )
+            .orElseThrow(() -> new CustomException(
+                HttpStatus.NOT_FOUND,
+                "회원들간 채팅방을 찾을 수 없습니다."
+            ));
+
+        if (chatRoom.getRoomId() != conversationDTO.getRoomId()) {
+            throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 채팅방 입니다.");
+        }
+
+        int size = conversationDTO.getLimit() > 0 ? conversationDTO.getLimit() : 10;
+        LocalDateTime createdAt = conversationDTO.getCreatedAt()==null?LocalDateTime.now():conversationDTO.getCreatedAt();
+
+        Pageable pageable = PageRequest.of(0, size, Sort.by("createdAt").descending());
+
+        List<ConversationResDTO> dtoPage = chatRepository.getConversationByCreatedAt(
+                conversationDTO.getUser1(),
+                conversationDTO.getUser2(),
+                createdAt,
+                State.ACTIVE,
+                pageable);
+        
+        return dtoPage;
+    }
+    
     @Override
     @Transactional(readOnly = true)
     public PageResponseDTO<ChatRoomResDTO> getMyChatRooms(String userId, int pageCount, int size) {
@@ -253,7 +284,8 @@ public class ChatServiceImpl implements ChatService {
             RabbitTemplate rabbitTemplate,
             @Qualifier("chatFanoutExchange") FanoutExchange chatFanoutExchange,
             @Qualifier("notificationFanoutExchange") FanoutExchange notificationFanoutExchange,
-            S3FileUtil s3FileUtil
+            S3FileUtil s3FileUtil,
+            RedisTemplate<String, Object> redisTemplate
     ) {
         this.modelMapper = modelMapper;
         this.chatRepository = chatRepository;
@@ -263,6 +295,7 @@ public class ChatServiceImpl implements ChatService {
         this.chatFanoutExchange = chatFanoutExchange;
         this.notificationFanoutExchange = notificationFanoutExchange;
         this.s3FileUtil = s3FileUtil;
+        this.redisTemplate=redisTemplate;
     }
     
 }

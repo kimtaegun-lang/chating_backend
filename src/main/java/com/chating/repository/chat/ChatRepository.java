@@ -47,6 +47,35 @@ public interface ChatRepository extends JpaRepository<Chat,Long> {
 			        Pageable pageable);
 
 	
+	@Query("""
+			SELECT new com.chating.dto.chat.ConversationResDTO(
+			    c.chatId,
+			    c.sender,
+			    c.receiver,
+			    c.content,
+			    c.createdAt,
+			    c.type,
+			    f.url,
+			    f.fileName,
+			    f.fileSize,
+			    c.isRead,
+			    c.state
+			)
+			FROM Chat c
+			LEFT JOIN c.chatFile f
+			WHERE 
+			    ((c.sender = :user1 AND c.receiver = :user2)
+			    OR (c.sender = :user2 AND c.receiver = :user1))
+			    AND c.createdAt < :createdAt
+				AND state=:state
+			""")
+			List<ConversationResDTO> getConversationByCreatedAt(
+			        @Param("user1") String user1,
+			        @Param("user2") String user2,
+			        @Param("createdAt") LocalDateTime createdAt,
+			        @Param("state") State state,
+			        Pageable pageable);
+	
 	// 업로드 후 30일 지난 파일 불러 오기
 	@Query("SELECT c FROM Chat c WHERE (c.type='FILE' OR c.type='IMAGE') AND c.createdAt < :limit")
 	List<Chat> findOldFiles(@Param("limit") LocalDateTime limit);

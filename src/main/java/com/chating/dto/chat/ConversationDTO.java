@@ -1,5 +1,7 @@
 package com.chating.dto.chat;
 
+import java.time.LocalDateTime;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -20,8 +22,7 @@ public class ConversationDTO { // 채팅 내역 req dto
     @NotNull(message = "로드할 메시지 개수는 양수여야 합니다")
     private int limit; // 한번에 로드한 메시지 갯수
     
-    @NotNull(message = "채팅 ID는 양수여야 합니다")
-    private int chatId; // 채팅 id
+    private LocalDateTime createdAt; // 채팅 생성일
     
     @NotNull(message="방 번호 ID가 존재하지 않습니다.")
     private int roomId;
