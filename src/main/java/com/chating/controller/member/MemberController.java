@@ -10,8 +10,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,6 +21,7 @@ import com.chating.dto.member.SignInDTO;
 import com.chating.dto.member.SignInResDTO;
 import com.chating.dto.member.SignUpDTO;
 import com.chating.dto.member.UpdateMemberDTO;
+import com.chating.entity.member.Member;
 import com.chating.service.member.MemberService;
 import com.chating.util.jwt.JwtUtil;
 
@@ -111,11 +112,14 @@ public class MemberController {
 	
 	// 회원 정보 수정
 	@PreAuthorize("isAuthenticated()")
-	@PutMapping("updateMemberInfo")
+	@PatchMapping("updateMemberInfo")
 	public ResponseEntity<Map<String,Object>> updateMemberInfo(@RequestBody @Valid UpdateMemberDTO updateData) {
-		memberService.updateMemberInfo(updateData);
+		System.out.println(updateData);
+		MemberInfoDTO updatedMember=memberService.updateMemberInfo(updateData);
 		Map<String,Object> response = new HashMap<>();
+		System.out.println(updatedMember);
 		response.put("message", "회원 정보가 수정되었습니다.");
+		response.put("updatedMember", updatedMember);
 		return ResponseEntity.ok(response);
 	}
 	

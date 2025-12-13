@@ -50,8 +50,8 @@ public class ChatController {
 
 	// 대화 내역 조회
 	@PreAuthorize("isAuthenticated()")
-	@PostMapping("api/chat/getConversation")
-	public ResponseEntity<Map<String, Object>> getConversation(@RequestBody @Valid ConversationDTO conversationDTO) {
+	@GetMapping("api/chat/getConversation")
+	public ResponseEntity<Map<String, Object>> getConversation(@Valid ConversationDTO conversationDTO) {
 		Map<String, Object> response = new HashMap<>();
 		response.put("message", "대화 내역 조회 완료");
 		response.put("data", chatService.getConversation(conversationDTO)); // 실제 대화 데이터

@@ -8,15 +8,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chating.dto.admin.StatusDTO;
 import com.chating.dto.common.SearchOptionDTO;
+import com.chating.entity.member.Status;
 import com.chating.service.admin.AdminService;
 import com.chating.service.member.MemberService;
 
@@ -55,12 +54,11 @@ public class AdminController {
 
     // 회원 정지/해제
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/members/{memberId}/status")
+    @PatchMapping("/members/{memberId}/status")
     public ResponseEntity<String> updateMemberStatus(
             @PathVariable ("memberId") String memberId,
-            @RequestBody StatusDTO status) {
-        
-        adminService.updateStatus(memberId, status.getStatus());
+            @RequestParam ("status") Status status) {       
+        adminService.updateStatus(memberId, status);
         return ResponseEntity.ok("회원 상태 변경 완료");
     }
 

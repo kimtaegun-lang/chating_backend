@@ -132,7 +132,7 @@ public class MemberServiceImpl implements MemberService {
 	// 회원 정보 수정
 	@Transactional
 	@Override
-	public void updateMemberInfo(UpdateMemberDTO updateData) {
+	public MemberInfoDTO updateMemberInfo(UpdateMemberDTO updateData) {
 		String userId = jwtUtil.getLoginId();
 		Member member = memberRepository.findById(userId)
 				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
@@ -172,7 +172,8 @@ public class MemberServiceImpl implements MemberService {
 			member.setPwd(passwordEncoder.encode(updateData.getNewPwd()));
 		}
 
-		memberRepository.save(member);
+		MemberInfoDTO updatedMember=modelMapper.map(memberRepository.save(member),MemberInfoDTO.class);
+		return updatedMember;
 	}
 
 	// 회원 탈퇴
