@@ -9,7 +9,7 @@
 로드 밸런서를 고려한 이중 서버 환경에서도 안정적으로 동작하도록 설계하여
 실시간 통신, 인증 처리, 동시성 문제를 중심으로 구현했습니다.
 
-⏱ 기간 / 인원
+기간 / 인원
 
 기간: 2025.10 ~ 2025.12
 
@@ -151,4 +151,5 @@ AWS S3
 <img width="1207" height="861" alt="alram" src="https://github.com/user-attachments/assets/6aba101c-e615-49e7-9707-5d7a568438ec" />
 <img width="1918" height="578" alt="matching" src="https://github.com/user-attachments/assets/4173dd98-13a5-4b28-b064-6393cb77b24f" />
 <img width="1900" height="797" alt="register" src="https://github.com/user-attachments/assets/e58286b2-bf63-4bf7-a758-eee819657d8d" />
+
 
