@@ -122,9 +122,9 @@ RabbitMQ Fanout Exchange를 적용하여
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 ![WebSocket](https://img.shields.io/badge/WebSocket-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
 ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 
 ### Frontend
 
@@ -135,18 +135,54 @@ RabbitMQ Fanout Exchange를 적용하여
 
 ## [프로젝트 화면]
 
-<img width="1901" height="62" alt="header" src="https://github.com/user-attachments/assets/bec26f28-beb8-45e8-b45f-1aec0d4b8f0b" />
-<img width="1896" height="788" alt="login" src="https://github.com/user-attachments/assets/2fe69927-7c1c-4101-ac39-627314d72c5d" />
-<img width="1902" height="810" alt="updateMemberInfo2" src="https://github.com/user-attachments/assets/b188bddb-c706-497c-95f6-9f64f2d6e425" />
-<img width="1895" height="687" alt="updateMemberInfo" src="https://github.com/user-attachments/assets/bcdcc9e4-0107-49b4-a697-e3e628a7e2df" />
-<img width="1898" height="786" alt="managementMember" src="https://github.com/user-attachments/assets/65418981-f18d-486e-9b48-b482060a4900" />
-<img width="1887" height="817" alt="chating" src="https://github.com/user-attachments/assets/84c7591d-a9e5-4086-adc3-931e83ab7be4" />
-<img width="1891" height="791" alt="chatingList" src="https://github.com/user-attachments/assets/a59ce0ec-bb75-49a6-b111-5fe18af50d61" />
-<img width="1896" height="208" alt="footer" src="https://github.com/user-attachments/assets/1e683ec2-703c-4c77-aa35-ed37dab32b48" />
-<img width="1892" height="786" alt="main" src="https://github.com/user-attachments/assets/13a04b9e-7011-44a2-9a04-8380c0ff3f53" />
-<img width="1207" height="861" alt="alram" src="https://github.com/user-attachments/assets/6aba101c-e615-49e7-9707-5d7a568438ec" />
-<img width="1918" height="578" alt="matching" src="https://github.com/user-attachments/assets/4173dd98-13a5-4b28-b064-6393cb77b24f" />
-<img width="1900" height="797" alt="register" src="https://github.com/user-attachments/assets/e58286b2-bf63-4bf7-a758-eee819657d8d" />
+### header, footer, main
+
+#### header
+<img width="1901" height="62" alt="header" src="https://github.com/user-attachments/assets/71d4a4c4-52f9-4307-9914-6f36f20dcfc1" />
+
+#### footer
+<img width="1896" height="208" alt="footer" src="https://github.com/user-attachments/assets/f3929910-5f92-4f98-a757-58d0e7f6c2a7" />
+
+#### main
+<img width="903" height="441" alt="main1" src="https://github.com/user-attachments/assets/aa5d281e-beac-45d5-9f8c-c20fa99d6306" />
+
+### 채팅
+
+#### 채팅 목록
+<img width="851" height="611" alt="chatingList1" src="https://github.com/user-attachments/assets/c3a148cc-2b07-4076-a0cc-57bc9e3f0ca1" />
+
+#### 채팅 방
+<img width="567" height="793" alt="chating1" src="https://github.com/user-attachments/assets/ca9d8519-bb8d-4fea-ba7c-94c7499d67d2" />
+
+#### 매칭
+<img width="575" height="489" alt="matching2" src="https://github.com/user-attachments/assets/204957cd-0d0d-4fba-9c04-d7d5d9be0dd1" />
+
+#### 알림
+<img width="323" height="291" alt="alram1" src="https://github.com/user-attachments/assets/12ac612d-a4ae-4a43-845a-21a7aac090f7" />
+
+### 회원
+
+#### 회원가입
+<img width="404" height="754" alt="register1" src="https://github.com/user-attachments/assets/205d58f0-629a-4c19-b109-ce0133de22ce" />
+
+#### 회원 정보 수정
+<img width="882" height="626" alt="updateMemberInfo_u1" src="https://github.com/user-attachments/assets/4f6baec2-f836-4e61-8191-d44d53b9e578" />
+
+<img width="667" height="552" alt="updateMemberInfou2" src="https://github.com/user-attachments/assets/614d361b-fa3f-41b1-94bf-3b2aae00ee69" />
+
+#### 로그인
+<img width="395" height="430" alt="login1" src="https://github.com/user-attachments/assets/c278a0ae-2bff-465a-8c61-051c34a19f93" />
+
+
+### 회원 관리
+
+
+
+
+
+
+
+
 
 
 
