@@ -116,24 +116,22 @@ RabbitMQ Fanout Exchange를 적용하여
 
 ## [사용 기술]
 
-Backend
+### Backend
 
-Java 17
+![Java](https://img.shields.io/badge/Java_17-007396?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+![WebSocket](https://img.shields.io/badge/WebSocket-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
 
-Spring Boot
+### Frontend
 
-Spring Security
-
-JPA (Hibernate)
-
-PostgreSQL
-
-WebSocket (STOMP, SockJS)
-
-RabbitMQ
-
-JWT
-
+![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Axios](https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white)
+![SockJS](https://img.shields.io/badge/SockJS-000000?style=for-the-badge&logo=socketdotio&logoColor=white)
 
 ## [프로젝트 화면]
 
@@ -149,6 +147,7 @@ JWT
 <img width="1207" height="861" alt="alram" src="https://github.com/user-attachments/assets/6aba101c-e615-49e7-9707-5d7a568438ec" />
 <img width="1918" height="578" alt="matching" src="https://github.com/user-attachments/assets/4173dd98-13a5-4b28-b064-6393cb77b24f" />
 <img width="1900" height="797" alt="register" src="https://github.com/user-attachments/assets/e58286b2-bf63-4bf7-a758-eee819657d8d" />
+
 
 
 
