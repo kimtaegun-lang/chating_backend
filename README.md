@@ -174,7 +174,22 @@ RabbitMQ Fanout Exchange를 적용하여
 <img width="395" height="430" alt="login1" src="https://github.com/user-attachments/assets/c278a0ae-2bff-465a-8c61-051c34a19f93" />
 
 
-### 회원 관리
+### 관리자
+
+#### 회원 관리
+<img width="897" height="942" alt="admin chat" src="https://github.com/user-attachments/assets/c496742a-78f9-4451-94f1-c315d8a3cb1a" />
+<img width="888" height="707" alt="admin caht2" src="https://github.com/user-attachments/assets/305882c2-2519-4c1f-8e23-9510cbb6d302" />
+
+#### 채팅 관리
+
+<img width="752" height="756" alt="adminchatroom" src="https://github.com/user-attachments/assets/e816d688-4934-45bf-b516-079d21598114" />
+
+#### 채팅 관리 리스트
+
+<img width="857" height="720" alt="admin chat list" src="https://github.com/user-attachments/assets/d6dda998-78ae-4733-b53e-d282e9a1a486" />
+
+
+
 
 
 
