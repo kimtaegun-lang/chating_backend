@@ -58,8 +58,6 @@ public class ChatServiceImpl implements ChatService {
 	private static final List<String> IMAGE_EXTENSIONS = List.of(
 	        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"
 	);
-	 private final RedisTemplate<String, Object> redisTemplate;
-	 private String	BATCH_KEY;
 	@Override
 	public void saveMessage(sendMessageDTO message) {
 		
@@ -173,51 +171,10 @@ public class ChatServiceImpl implements ChatService {
         rabbitTemplate.convertAndSend(chatFanoutExchange.getName(), "", response);
         
     }
-/*
-    @Override
-    @Transactional(readOnly = true)
-    public PageResponseDTO<ConversationResDTO> getConversation(ConversationDTO conversationDTO) {
-        ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
-                conversationDTO.getUser1(),
-                conversationDTO.getUser2()
-            )
-            .orElseThrow(() -> new CustomException(
-                HttpStatus.NOT_FOUND,
-                "회원들간 채팅방을 찾을 수 없습니다."
-            ));
-
-        if (chatRoom.getRoomId() != conversationDTO.getRoomId()) {
-            throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 채팅방 입니다.");
-        }
-
-        int size = conversationDTO.getLimit() > 0 ? conversationDTO.getLimit() : 10;
-        Long chatId = conversationDTO.getChatId() > 0 ? (long) conversationDTO.getChatId() : Long.MAX_VALUE;
-
-        Pageable pageable = PageRequest.of(0, size, Sort.by("createdAt").descending());
-
-        Page<ConversationResDTO> dtoPage = chatRepository.getConversationByChatId(
-                conversationDTO.getUser1(),
-                conversationDTO.getUser2(),
-                chatId,
-                State.ACTIVE,
-                pageable);
-
-        PageResponseDTO<ConversationResDTO> response = new PageResponseDTO<>(dtoPage);
-        
-        if (!dtoPage.getContent().isEmpty()) {
-            int lastIndex = dtoPage.getContent().size() - 1;
-            response.setCurrentPage(dtoPage.getContent().get(lastIndex).getChatId().intValue());
-        } else {
-            response.setCurrentPage(0);
-        }
-        
-        return response;
-    } */
 
     @Override
     @Transactional(readOnly = true)
     public List<ConversationResDTO> getConversation(ConversationDTO conversationDTO) {
-    	System.out.println(conversationDTO.getCreatedAt()+"------------------------------------------------------");
         ChatRoom chatRoom = chatRoomRepository.findRoomByIds(
                 conversationDTO.getUser1(),
                 conversationDTO.getUser2()
@@ -226,7 +183,6 @@ public class ChatServiceImpl implements ChatService {
                 HttpStatus.NOT_FOUND,
                 "회원들간 채팅방을 찾을 수 없습니다."
             ));
-
         if (chatRoom.getRoomId() != conversationDTO.getRoomId()) {
             throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 채팅방 입니다.");
         }
@@ -236,13 +192,15 @@ public class ChatServiceImpl implements ChatService {
 
         Pageable pageable = PageRequest.of(0, size, Sort.by("createdAt").descending());
 
+        System.out.println(conversationDTO);
+        System.out.println(createdAt);
         List<ConversationResDTO> dtoPage = chatRepository.getConversationByCreatedAt(
                 conversationDTO.getUser1(),
                 conversationDTO.getUser2(),
                 createdAt,
-                State.ACTIVE,
+                State
+                .ACTIVE,
                 pageable);
-        
         return dtoPage;
     }
     
@@ -295,7 +253,6 @@ public class ChatServiceImpl implements ChatService {
         this.chatFanoutExchange = chatFanoutExchange;
         this.notificationFanoutExchange = notificationFanoutExchange;
         this.s3FileUtil = s3FileUtil;
-        this.redisTemplate=redisTemplate;
     }
     
 }

@@ -52,9 +52,11 @@ public class ChatController {
 	@PreAuthorize("isAuthenticated()")
 	@GetMapping("api/chat/getConversation")
 	public ResponseEntity<Map<String, Object>> getConversation(@Valid ConversationDTO conversationDTO) {
+		System.out.println(conversationDTO);
 		Map<String, Object> response = new HashMap<>();
 		response.put("message", "대화 내역 조회 완료");
-		response.put("data", chatService.getConversation(conversationDTO)); // 실제 대화 데이터
+		response.put("data", chatService.getConversation(conversationDTO)); 
+			System.out.println("대화 내역:"+conversationDTO);
 		return ResponseEntity.ok(response);
 	}
 

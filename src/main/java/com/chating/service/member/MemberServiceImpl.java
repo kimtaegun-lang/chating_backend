@@ -82,7 +82,7 @@ public class MemberServiceImpl implements MemberService {
 	            .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "아이디가 일치하지 않습니다."));
 
 	    if (member.getStatus() == Status.BANNED) {
-	        throw new CustomException(HttpStatus.FORBIDDEN, "이 계정은 이용이 정지되었습니다.");
+	        throw new CustomException(HttpStatus.BAD_REQUEST, "이 계정은 이용이 정지되었습니다.");
 	    }
 
 	    try {
