@@ -87,7 +87,7 @@ pipeline {
         }
     }
     
-  post {
+ post {
     success {
         echo '백엔드 배포 성공!'
     }
@@ -95,7 +95,8 @@ pipeline {
         echo '백엔드 배포 실패!'
     }
     always {
-        node {
+        script {
+            sh 'docker image prune -f || true'
             cleanWs()
         }
     }
