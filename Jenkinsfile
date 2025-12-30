@@ -9,8 +9,8 @@ pipeline {
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         
         EC2_HOST_1 = '13.48.48.219'
-        EC2_HOST_2 = '13.62.46.197'
-        
+        EC2_HOST_2 = '56.228.11.4'
+
         AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
     }
