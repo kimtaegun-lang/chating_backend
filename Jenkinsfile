@@ -52,18 +52,19 @@ pipeline {
                     def ec2Hosts = [EC2_HOST_1, EC2_HOST_2]
                     
                     for (host in ec2Hosts) {
-                        sshagent(credentials: ['ec2-ssh-key']) {
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ec2-user@${host} << 'ENDSSH'
-                                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                                    cd ~/app
-                                    docker-compose down || true
-                                    docker pull ${ECR_REGISTRY}/${BACKEND_REPO}:latest
-                                    docker-compose up -d
-                                    docker image prune -af
-									ENDSSH
-                            """
-                        }
+                      sshagent(credentials: ['ec2-ssh-key']) {
+    sh """
+ssh -o StrictHostKeyChecking=no ec2-user@${host} << 'ENDSSH'
+aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+cd /home/ec2-user/app
+docker-compose down || true
+docker pull ${ECR_REGISTRY}/${BACKEND_REPO}:latest
+docker-compose up -d
+docker image prune -af || true
+ENDSSH
+"""
+}
+
                         echo "Deployed to ${host}"
                         sleep 5
                     }
