@@ -1,0 +1,9 @@
+services:
+  backend:
+    image: 663466149089.dkr.ecr.eu-north-1.amazonaws.com/chating-backend:latest
+    container_name: chating-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    restart: always
