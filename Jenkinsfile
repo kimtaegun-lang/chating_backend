@@ -21,18 +21,12 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            when {
-                branch 'main'  // main 브랜치만 빌드
-            }
             steps {
                 checkout scm
             }
         }
 
         stage('Build Docker Image') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
                     sh """
@@ -45,9 +39,6 @@ pipeline {
         }
 
         stage('Push to ECR') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
                     sh """
@@ -60,9 +51,6 @@ pipeline {
         }
 
         stage('Deploy to EC2s') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
                     def ec2Hosts = [EC2_HOST_1, EC2_HOST_2]
@@ -91,9 +79,6 @@ ENDSSH
         }
 
         stage('Health Check') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
                     def ec2Hosts = [EC2_HOST_1, EC2_HOST_2]
