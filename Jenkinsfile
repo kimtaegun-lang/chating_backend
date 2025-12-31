@@ -73,20 +73,15 @@ ENDSSH
         }
         
         stage('Health Check') {
-            steps {
-                script {
-                    sleep 10
-                    [EC2_HOST_1, EC2_HOST_2].each { host ->
-                        try {
-                            sh "curl -f http://${host}:8080/ || echo 'Warning'"
-                            echo "${host} is healthy"
-                        } catch (Exception e) {
-                            echo "${host} health check failed"
-                        }
-                    }
-                }
-            }
+    steps {
+        script {
+            sh """
+            curl -f --connect-timeout 3 --max-time 5 http://13.48.48.219:8080/health
+            curl -f --connect-timeout 3 --max-time 5 http://56.228.11.4:8080/health
+            """
         }
+    }
+}
     }
     
  post {
