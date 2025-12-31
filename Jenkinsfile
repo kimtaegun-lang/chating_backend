@@ -1,10 +1,10 @@
 pipeline {
     agent any
 
- triggers {
-        githubPush()  
+    triggers {
+        githubPush()  // GitHub push 이벤트 시 자동 빌드
     }
-    
+
     environment {
         AWS_REGION = 'eu-north-1'
         AWS_ACCOUNT_ID = '663466149089'
@@ -21,12 +21,18 @@ pipeline {
 
     stages {
         stage('Checkout') {
+            when {
+                branch 'main'  // main 브랜치만 빌드
+            }
             steps {
                 checkout scm
             }
         }
 
         stage('Build Docker Image') {
+            when {
+                branch 'main'
+            }
             steps {
                 script {
                     sh """
@@ -39,6 +45,9 @@ pipeline {
         }
 
         stage('Push to ECR') {
+            when {
+                branch 'main'
+            }
             steps {
                 script {
                     sh """
@@ -51,6 +60,9 @@ pipeline {
         }
 
         stage('Deploy to EC2s') {
+            when {
+                branch 'main'
+            }
             steps {
                 script {
                     def ec2Hosts = [EC2_HOST_1, EC2_HOST_2]
@@ -73,12 +85,15 @@ ENDSSH
                     }
                     
                     echo "애플리케이션 시작 대기 중..."
-                    sleep 20
+                    sleep 30
                 }
             }
         }
 
         stage('Health Check') {
+            when {
+                branch 'main'
+            }
             steps {
                 script {
                     def ec2Hosts = [EC2_HOST_1, EC2_HOST_2]
