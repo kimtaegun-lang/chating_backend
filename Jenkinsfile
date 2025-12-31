@@ -56,10 +56,12 @@ pipeline {
                             sh """
                                 ssh -o StrictHostKeyChecking=no ec2-user@${host} << 'ENDSSH'
                                     aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                                    cd ~/app
                                     docker-compose down || true
                                     docker pull ${ECR_REGISTRY}/${BACKEND_REPO}:latest
                                     docker-compose up -d
-                                    docker image prune -af ENDSSH
+                                    docker image prune -af
+									ENDSSH
                             """
                         }
                         echo "Deployed to ${host}"
