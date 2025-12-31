@@ -44,7 +44,7 @@ public class UserSessionManager {
                 hashOps.delete(USER_TO_SESSION, userId);
                 hashOps.delete(USER_TO_SERVER, userId);
             }
-        }
+        }//
     }
 
     // 특정 유저가 이 서버에 연결되어 있는지 확인
