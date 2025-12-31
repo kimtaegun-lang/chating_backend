@@ -72,13 +72,38 @@ ENDSSH
             }
         }
         
-        stage('Health Check') {
+     stage('Health Check') {
     steps {
         script {
-            sh """
-            curl -f --connect-timeout 3 --max-time 5 http://13.48.48.219:8080/health
-            curl -f --connect-timeout 3 --max-time 5 http://56.228.11.4:8080/health
-            """
+            def ec2Hosts = [EC2_HOST_1, EC2_HOST_2]
+            
+            for (host in ec2Hosts) {
+                
+                def maxRetries = 12
+                def retryDelay = 5
+                def success = false
+                
+                for (int i = 1; i <= maxRetries; i++) {
+                    try {
+                        sshagent(credentials: ['ec2-ssh-key']) {
+                            sh """
+ssh -o StrictHostKeyChecking=no ec2-user@${host} << 'ENDSSH'
+curl -f --connect-timeout 5 --max-time 10 http://localhost:8080/health
+ENDSSH
+"""
+                        }
+                        success = true
+                        break
+                    } catch (Exception e) {
+                        if (i < maxRetries) {
+                            echo "헬스 체크 재시도"
+                            sleep retryDelay
+                        } else {
+                            error "헬스 체크 실패"
+                        }
+                    }
+                }
+            }
         }
     }
 }
