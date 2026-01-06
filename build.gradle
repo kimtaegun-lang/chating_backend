@@ -25,7 +25,7 @@ dependencies {
     
     // PostgreSQL
    runtimeOnly 'org.postgresql:postgresql'
-     //runtimeOnly 'com.h2database:h2'
+     runtimeOnly 'com.h2database:h2'
      implementation group: 'org.javassist', name: 'javassist', version: '3.15.0-GA'
      
     // Lombok
