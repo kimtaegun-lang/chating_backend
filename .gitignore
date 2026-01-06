@@ -47,3 +47,6 @@ tmp/
 # Docker 빌드 산출물은 보통 올리지 않음
 docker-compose.override.yml
 *.dockerfile
+
+# h2 db
+data/testdb.mv.db
