@@ -2,6 +2,7 @@ package com.chating.util.jwt;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -23,11 +24,10 @@ public class JwtUtil {
     @Value("${jwt.secret:your-super-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm}")
     private String secretKey;
 
-    @Value("${jwt.expiration:1800000}") // 30분
-    //@Value("${jwt.expiration:3000}") // 30분
+    @Value("${jwt.access-expiration:1800000}")
     private long expirationTime;
 
-    @Value("${jwt.expiration:604800000}") // 7일
+    @Value("${jwt.refresh-expiration:604800000}")
     private long refreshExpirationTime;
     
     // Token 생성
@@ -36,6 +36,7 @@ public class JwtUtil {
                 .setSubject(username) // 토큰에 저장할 정보
                 .setIssuedAt(new Date()) // 발행일
                 .claim("role",role)
+                .setId(UUID.randomUUID().toString())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime)) // 만료시간 
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)), // 서명
                          SignatureAlgorithm.HS256)
@@ -46,6 +47,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
+                .setId(UUID.randomUUID().toString())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationTime))
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
                 .compact();
