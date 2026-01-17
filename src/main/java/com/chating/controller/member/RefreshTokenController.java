@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -30,19 +31,29 @@ public class RefreshTokenController {
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
+    private final RedisTemplate<String,Object> redisTemplate;
     @PostMapping("/api/refresh")
     public ResponseEntity<Map<String,Object>> refreshAccessToken(
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
             @CookieValue(name = "accessToken", required = false) String accessToken,
             HttpServletRequest request,
             HttpServletResponse response) {
-        
+
+    	String key = jwtUtil.extractUsername(refreshToken)+ "-refreshToken";
+    	Object obj = redisTemplate.opsForValue().get(key); // redis에 저장된 freshtoken 값
+    	String savedToken = obj != null ? (String) obj : null;
         System.out.println("토큰을 재발급 합니다.");
-        // RefreshToken 검증
+
+        System.out.println("savedToken:"+savedToken);
         if (refreshToken == null || !jwtUtil.isTokenValid(refreshToken)) {
             throw new CustomException(HttpStatus.FORBIDDEN, "세션이 만료되었습니다. 다시 로그인 해주세요.");
-        } 
+        }  
         
+        if(savedToken==null)
+        {
+        throw new CustomException(HttpStatus.FORBIDDEN, "세션이 만료되었습니다. 다시 로그인 해주세요.");
+        }
+        /*
      // DB에서 토큰 확인
         RefreshToken tokenEntity = refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new CustomException(HttpStatus.FORBIDDEN,
@@ -53,7 +64,7 @@ public class RefreshTokenController {
             refreshTokenRepository.delete(tokenEntity); // 만료 토큰 삭제
             throw new CustomException(HttpStatus.FORBIDDEN,
                     "세션이 만료되었습니다. 다시 로그인 해주세요.");
-        }
+        } */
 
         // AccessToken 남은 시간 체크 (5분 이상 남으면 재발급 차단)
         if (accessToken != null && jwtUtil.isTokenValid(accessToken)) {

@@ -1,10 +1,10 @@
 package com.chating.service.member;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -21,7 +21,6 @@ import com.chating.dto.member.SignInResDTO;
 import com.chating.dto.member.SignUpDTO;
 import com.chating.dto.member.UpdateMemberDTO;
 import com.chating.entity.member.Member;
-import com.chating.entity.member.RefreshToken;
 import com.chating.entity.member.Role;
 import com.chating.entity.member.Status;
 import com.chating.repository.member.MemberRepository;
@@ -38,9 +37,8 @@ public class MemberServiceImpl implements MemberService {
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final ModelMapper modelMapper;
 	private final PasswordEncoder passwordEncoder;
-	private final AuthenticationManager authenticationManager;
 	private final JwtUtil jwtUtil;
-
+	private final RedisTemplate<String,Object> redisTemplate;
 	// 회원 가입 로직
 	@Transactional
 	@Override
@@ -75,28 +73,29 @@ public class MemberServiceImpl implements MemberService {
 
 	
 	 // 로그인
-	@Transactional
 	@Override
 	public SignInResDTO signIn(SignInDTO userData) {
 	    Member member = memberRepository.findById(userData.getMemId())
-	            .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "아이디가 일치하지 않습니다."));
+	            .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "아이디 또는 비밀번호가 일치하지 않습니다."));
 
 	    if (member.getStatus() == Status.BANNED) {
 	        throw new CustomException(HttpStatus.BAD_REQUEST, "이 계정은 이용이 정지되었습니다.");
 	    }
 
-	    try {
-	        Authentication authentication = authenticationManager.authenticate(
-	                new UsernamePasswordAuthenticationToken(userData.getMemId(), userData.getPwd())
-	        );
-	        SecurityContextHolder.getContext().setAuthentication(authentication);
-	    } catch (BadCredentialsException e) {
-	        throw new CustomException(HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다.");
+	    if (!passwordEncoder.matches(userData.getPwd(), member.getPwd())) {
+	        throw new CustomException(HttpStatus.BAD_REQUEST, "아이디 또는 비밀번호가 일치하지 않습니다.");
 	    }
 
 	    String accessToken = jwtUtil.generateAccessToken(userData.getMemId(), member.getRole());
 	    String refreshToken = jwtUtil.generateRefreshToken(userData.getMemId());
-
+	    String key= userData.getMemId()+"-refreshToken";
+	    
+	    redisTemplate.opsForValue().set(
+	    	    key,
+	    	    refreshToken,
+	    	    30, TimeUnit.DAYS 
+	    	);
+	    /*
 	    // refresh token 관리
 	    List<RefreshToken> existingTokens = refreshTokenRepository.findAllByMemberMemId(userData.getMemId());
 	    if (existingTokens.size() >= 5) {
@@ -104,7 +103,7 @@ public class MemberServiceImpl implements MemberService {
 	                .min(Comparator.comparing(RefreshToken::getCreatedTime))
 	                .orElseThrow();
 	        refreshTokenRepository.delete(oldest);
-	    }
+	    } 
 
 	    refreshTokenRepository.save(
 	        RefreshToken.builder()
@@ -113,19 +112,21 @@ public class MemberServiceImpl implements MemberService {
 	            .exiredTime(LocalDateTime.now().plusDays(7))
 	            .createdTime(LocalDateTime.now())
 	            .build()
-	    );
+	    ); */
 
 	    return new SignInResDTO(accessToken,refreshToken);
 	}
 	
 	// 로그 아웃
-	@Transactional
 	@Override
 	public void signOut() {
 		String userId = jwtUtil.getLoginId();
-		Member member = memberRepository.findById(userId)
-				.orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
-		refreshTokenRepository.deleteByMemberMemId(member.getMemId());
+		 String key = userId + "-refreshToken";
+		    Boolean deleted = redisTemplate.delete(key);
+		    if (Boolean.FALSE.equals(deleted)) {
+		        throw new CustomException(HttpStatus.NOT_FOUND, "로그아웃 처리 중 오류가 발생했습니다.");
+		    }
+		//refreshTokenRepository.deleteByMemberMemId(member.getMemId());
 	}
 
 
@@ -195,7 +196,6 @@ public class MemberServiceImpl implements MemberService {
 	}
 	
 	 // accesstoken 검증 및 회원 정보 전달
-	@Transactional
 	@Override
 	 public MemberInfoDTO validateAndGetUserInfo(String accessToken) {
 		if(!jwtUtil.isTokenValid(accessToken))
